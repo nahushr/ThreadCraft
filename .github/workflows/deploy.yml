@@ -152,11 +152,24 @@ jobs:
         if: steps.release.outputs.bumped == 'true'
         env:
           VERSION: ${{ steps.release.outputs.version }}
+          PACKAGE_NAME: "@simplishelf/threadcraft"
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          npm update @simplishelf/threadcraft --workspace=threadcraft-vite-example --package-lock-only --ignore-scripts
+          latest_version=""
+          for attempt in $(seq 1 60); do
+            latest_version=$(npm view "$PACKAGE_NAME" dist-tags.latest --registry=https://registry.npmjs.org --prefer-online 2>/dev/null || true)
+            if [ "$latest_version" = "$VERSION" ]; then
+              break
+            fi
+            sleep 5
+          done
+          if [ "$latest_version" != "$VERSION" ]; then
+            echo "::error::npm latest did not reach $VERSION before the lockfile refresh."
+            exit 1
+          fi
+          npm update "$PACKAGE_NAME" --workspace=threadcraft-vite-example --package-lock-only --ignore-scripts --prefer-online
           git add package.json package-lock.json
           git commit -m "chore(release): sync npm version $VERSION [skip ci]"
           for attempt in $(seq 1 5); do
