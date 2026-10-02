@@ -1,4 +1,4 @@
-import type { ThreadCraftComment, ThreadCraftLoadMoreRequest, ThreadCraftLoadMoreResult } from "@threadcraft/react";
+import type { ThreadCraftComment, ThreadCraftLoadMoreRequest, ThreadCraftLoadMoreResult } from "@simplishelf/threadcraft";
 
 const TOTAL_ISSUE_ROOTS = 113;
 const TOTAL_REVIEW_ROOTS = 107;

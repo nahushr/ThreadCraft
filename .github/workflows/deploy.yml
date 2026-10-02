@@ -109,7 +109,7 @@ jobs:
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
-          scope: '@threadcraft'
+          scope: '@simplishelf'
 
       - name: Verify npm publishing identity
         env:
@@ -122,7 +122,8 @@ jobs:
       - name: Select the next available patch version
         id: release
         env:
-          PACKAGE_NAME: "@threadcraft/react"
+          PACKAGE_NAME: "@simplishelf/threadcraft"
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
           version=$(node -p "require('./package.json').version")

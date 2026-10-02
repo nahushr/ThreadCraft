@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { GitHubIssueThread, ReviewThread } from "@threadcraft/react";
-import type { ThreadCraftData, ThreadCraftSubmitPayload } from "@threadcraft/react";
+import { GitHubIssueThread, ReviewThread } from "@simplishelf/threadcraft";
+import type { ThreadCraftData, ThreadCraftSubmitPayload } from "@simplishelf/threadcraft";
 import issueFixture from "./test-data/github-issue.json";
 import reviewFixture from "./test-data/reviews.json";
 import { fetchMoreIssueComments, fetchMoreReviews } from "./mockApi";
