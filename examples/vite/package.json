@@ -8,7 +8,7 @@
     "build": "vite build"
   },
   "dependencies": {
-    "@simplishelf/threadcraft": "file:../..",
+    "@simplishelf/threadcraft": "latest",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   }
