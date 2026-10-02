@@ -17,9 +17,19 @@ import CommentThread from "./components/CommentThread";
 import DiscussionHeader from "./components/DiscussionHeader";
 import styles from "./ThreadedDiscussion.module.scss";
 
+let fallbackCommentIdSequence = 0;
+
 const createCommentId = (): string => {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
-  return `comment-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  if (typeof crypto !== "undefined") {
+    if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+    if (typeof crypto.getRandomValues === "function") {
+      const bytes = crypto.getRandomValues(new Uint8Array(16));
+      const suffix = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+      return `comment-${suffix}`;
+    }
+  }
+  fallbackCommentIdSequence += 1;
+  return `comment-${Date.now()}-${fallbackCommentIdSequence}`;
 };
 
 const countComments = (comments: ThreadCraftComment[]): number =>
