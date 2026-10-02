@@ -1,0 +1,5 @@
+.picker { display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0 0 10px; padding: 0; border: 0; }
+.picker legend { float: left; margin-right: 3px; color: #667085; font-size: 11px; font-weight: 650; }
+.stars { display: inline-flex; gap: 2px; }
+.star { padding: 0 1px; border: 0; color: #e6a700; background: transparent; font-size: 23px; line-height: 1; cursor: pointer; transition: transform .12s ease; }
+.star:hover { transform: scale(1.12); }

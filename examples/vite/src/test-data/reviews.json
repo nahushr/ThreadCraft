@@ -1,0 +1,48 @@
+{
+  "id": "linen-shirt",
+  "kind": "review",
+  "title": "Linen Everyday Shirt",
+  "author": "ThreadCraft Store",
+  "body": "Customer reviews and business replies for the Linen Everyday Shirt.",
+  "showRating": true,
+  "hasMore": true,
+  "totalRootComments": 107,
+  "comments": [
+    {
+      "id": "review-1",
+      "author": "Morgan Reed",
+      "authorType": "customer",
+      "createdAt": "2026-09-26T13:20:00.000Z",
+      "text": "Really comfortable fabric and a good fit. I have already ordered another color.",
+      "rating": 5,
+      "reactions": { "❤️": 3, "👍": 2 },
+      "replies": [
+        {
+          "id": "review-1-reply-1",
+          "author": "ThreadCraft Store",
+          "authorType": "business",
+          "createdAt": "2026-09-26T16:05:00.000Z",
+          "text": "Thanks, Morgan! We are glad you like the shirt. 😊"
+        }
+      ]
+    },
+    {
+      "id": "review-2",
+      "author": "Taylor Brooks",
+      "authorType": "customer",
+      "createdAt": "2026-09-24T10:45:00.000Z",
+      "text": "Looks great. The sleeves are a little long for me, but the quality is excellent.",
+      "rating": 4,
+      "replies": []
+    },
+    {
+      "id": "review-3",
+      "author": "Casey Rivera",
+      "authorType": "customer",
+      "createdAt": "2026-09-22T17:05:00.000Z",
+      "text": "Lightweight and breathable. Perfect for warm weather.",
+      "rating": 5,
+      "replies": []
+    }
+  ]
+}

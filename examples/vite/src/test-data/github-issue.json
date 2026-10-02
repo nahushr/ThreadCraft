@@ -1,0 +1,64 @@
+{
+  "id": 842,
+  "kind": "issue",
+  "title": "Export button stays disabled after choosing a date range",
+  "author": "Priya Shah",
+  "createdAt": "2026-09-28T14:32:00.000Z",
+  "status": "Open",
+  "url": "https://github.com/",
+  "body": "The export button stays disabled after I choose a valid date range. Refreshing the page fixes it temporarily.",
+  "hasMore": true,
+  "totalRootComments": 113,
+  "comments": [
+    {
+      "id": "issue-1",
+      "author": "Priya Shah",
+      "authorType": "customer",
+      "createdAt": "2026-09-28T15:04:00.000Z",
+      "text": "I can reproduce this in Chrome 129 on macOS. The date picker shows the correct range, but the action never enables.",
+      "reactions": { "👍": 2, "❤️": 1 },
+      "replies": [
+        {
+          "id": "issue-1-reply-1",
+          "author": "Maya Chen",
+          "authorType": "support",
+          "createdAt": "2026-09-28T15:31:00.000Z",
+          "text": "Thanks for the clear steps. We found a stale state update and are preparing a fix.",
+          "reactions": { "🎉": 1 },
+          "replies": [
+            {
+              "id": "issue-1-reply-2",
+              "author": "Priya Shah",
+              "authorType": "customer",
+              "createdAt": "2026-09-28T15:42:00.000Z",
+              "text": "That matches what I am seeing. Thank you!"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "issue-2",
+      "author": "Jordan Lee",
+      "authorType": "customer",
+      "createdAt": "2026-09-28T16:10:00.000Z",
+      "text": "Same issue here. Adding an attachment so you can see the disabled button.",
+      "attachments": [
+        {
+          "name": "disabled-export.png",
+          "url": "https://images.unsplash.com/photo-1557683316-973673baf926?w=420",
+          "mimeType": "image/png"
+        }
+      ],
+      "replies": []
+    },
+    {
+      "id": "issue-3",
+      "author": "Maya Chen",
+      "authorType": "support",
+      "createdAt": "2026-09-29T09:21:00.000Z",
+      "text": "We have a fix in review. I will update this thread once the release is available.",
+      "replies": []
+    }
+  ]
+}

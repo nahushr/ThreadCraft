@@ -1,0 +1,66 @@
+.root {
+  --tc-accent: #315efb;
+  --tc-accent-dark: #2449cb;
+  --tc-line: #e4e7ec;
+  --tc-muted: #667085;
+  --tc-text: #1d2939;
+  --tc-surface: #fff;
+  --tc-soft: #f8fafc;
+
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  container-name: threadcraft-discussion;
+  container-type: inline-size;
+  color: var(--tc-text);
+  font: 14px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.root, .root *, .root *::before, .root *::after { box-sizing: border-box; }
+
+.streamHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 22px 2px 10px;
+  color: var(--tc-muted);
+  font-size: 11px;
+}
+
+.streamHeading strong { color: var(--tc-text); font-size: 14px; font-weight: 750; }
+.streamHeading span { color: #667085; }
+.stream { display: flex; flex-direction: column; gap: 14px; }
+
+.empty {
+  margin: 0;
+  padding: 30px 20px;
+  border: 1px dashed #d0d5dd;
+  border-radius: 13px;
+  color: #667085;
+  background: #fcfcfd;
+  text-align: center;
+}
+
+.moreButton {
+  align-self: center;
+  min-height: 38px;
+  margin-top: 3px;
+  padding: 8px 16px;
+  border: 1px solid #dce3ff;
+  border-radius: 9px;
+  color: var(--tc-accent);
+  background: #f9faff;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: background .14s ease, border-color .14s ease;
+}
+
+.moreButton:hover:not(:disabled) { border-color: #b9c6ff; background: #eff2ff; }
+.moreButton:disabled { opacity: .65; cursor: wait; }
+.error { align-self: center; margin: 0; color: #b42318; font-size: 11px; }
+
+@container threadcraft-discussion (max-width: 600px) {
+  .streamHeading { margin-top: 18px; }
+}
