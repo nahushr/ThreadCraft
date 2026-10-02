@@ -59,6 +59,48 @@ describe("ThreadedDiscussion examples", () => {
     expect(screen.queryByText("Your rating")).toBeNull();
   });
 
+  it("applies JSON role styling and per-user avatar overrides", () => {
+    const data: ThreadCraftData = {
+      title: "Issue",
+      authorTypeStyles: {
+        customer: {
+          label: "Member",
+          icon: "✨",
+          color: "#173B8F",
+          backgroundColor: "#E8EEFF",
+          borderColor: "#B7C7FF",
+          cardColor: "#F5F7FF",
+          cardBorderColor: "#CDD7FF",
+          cardTextColor: "#1E293B",
+          avatarBackgroundColor: "#DBEAFE",
+          avatarTextColor: "#1D4ED8",
+          avatarBorderColor: "#FFFFFF",
+        },
+      },
+      comments: [{
+        id: "root",
+        author: "Ari",
+        authorType: "customer",
+        authorAvatarUrl: "https://example.com/ari.png",
+        avatarBackgroundColor: "#FFE4E6",
+        avatarTextColor: "#9F1239",
+        cardColor: "#FFF7ED",
+        text: "Great fit.",
+      }],
+    };
+    const { container } = render(<GitHubIssueThread data={data} />);
+    const badge = screen.getByText("Member").closest("span");
+    const avatar = container.querySelector("img") as HTMLImageElement;
+    const card = screen.getByText("Great fit.").parentElement as HTMLDivElement;
+
+    expect(badge?.textContent).toBe("✨Member");
+    expect(badge?.style.getPropertyValue("--tc-author-chip-color")).toBe("#173B8F");
+    expect(avatar.src).toBe("https://example.com/ari.png");
+    expect(avatar.style.getPropertyValue("--tc-avatar-background")).toBe("#FFE4E6");
+    expect(card.style.getPropertyValue("--tc-comment-card-background")).toBe("#FFF7ED");
+    expect(card.style.getPropertyValue("--tc-comment-card-border")).toBe("#CDD7FF");
+  });
+
   it("inserts selected emoji into the comment draft", async () => {
     const data: ThreadCraftData = { title: "Issue", comments: [] };
     render(<GitHubIssueThread data={data} />);

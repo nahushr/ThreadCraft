@@ -6,12 +6,56 @@
   "body": "Customer reviews and business replies for the Linen Everyday Shirt.",
   "showRating": true,
   "hasMore": true,
-  "totalRootComments": 107,
+  "totalRootComments": 60,
+  "authorTypeStyles": {
+    "customer": {
+      "label": "Customer",
+      "color": "#2546A8",
+      "backgroundColor": "#EEF2FF",
+      "borderColor": "#C7D2FE",
+      "icon": "🛍️",
+      "cardColor": "#F3F5FF",
+      "cardBorderColor": "#D7DFFF",
+      "cardTextColor": "#24304A",
+      "avatarBackgroundColor": "#E5ECFF",
+      "avatarTextColor": "#315EFB",
+      "avatarBorderColor": "#FFFFFF"
+    },
+    "business": {
+      "label": "ThreadCraft Store",
+      "color": "#087E70",
+      "backgroundColor": "#E8FAF5",
+      "borderColor": "#A7F3D0",
+      "icon": "🏪",
+      "cardColor": "#EFFBF7",
+      "cardBorderColor": "#BDEBDD",
+      "cardTextColor": "#1D3B35",
+      "avatarBackgroundColor": "#D8F5EA",
+      "avatarTextColor": "#087E70",
+      "avatarBorderColor": "#FFFFFF"
+    },
+    "support": {
+      "label": "Support",
+      "color": "#673AB7",
+      "backgroundColor": "#F3EDFF",
+      "borderColor": "#D9C7FF",
+      "icon": "💬",
+      "cardColor": "#FBF8FF",
+      "cardBorderColor": "#E6D9FF",
+      "cardTextColor": "#352A4D",
+      "avatarBackgroundColor": "#EFE6FF",
+      "avatarTextColor": "#6941C6",
+      "avatarBorderColor": "#FFFFFF"
+    }
+  },
   "comments": [
     {
       "id": "review-1",
       "author": "Morgan Reed",
       "authorType": "customer",
+      "authorAvatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=96&h=96&fit=crop&crop=faces",
+      "avatarBackgroundColor": "#FCE7F3",
+      "avatarTextColor": "#9D174D",
       "createdAt": "2026-09-26T13:20:00.000Z",
       "text": "Really comfortable fabric and a good fit. I have already ordered another color.",
       "rating": 5,
@@ -21,8 +65,63 @@
           "id": "review-1-reply-1",
           "author": "ThreadCraft Store",
           "authorType": "business",
+          "authorAvatarUrl": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=96&h=96&fit=crop",
           "createdAt": "2026-09-26T16:05:00.000Z",
-          "text": "Thanks, Morgan! We are glad you like the shirt. 😊"
+          "text": "Thanks, Morgan! We are glad you like the shirt. 😊",
+          "replies": [
+            {
+              "id": "review-1-reply-2",
+              "author": "Morgan Reed",
+              "authorType": "customer",
+              "createdAt": "2026-09-26T17:12:00.000Z",
+              "text": "I ordered the blue one too. I usually wear a medium; would you keep the same size?",
+              "replies": [
+                {
+                  "id": "review-1-reply-3",
+                  "author": "ThreadCraft Store",
+                  "authorType": "business",
+                  "createdAt": "2026-09-26T18:01:00.000Z",
+                  "text": "The blue shirt has the same cut. If your first medium feels comfortable through the shoulders, we recommend staying with it.",
+                  "replies": [
+                    {
+                      "id": "review-1-reply-4",
+                      "author": "Morgan Reed",
+                      "authorType": "customer",
+                      "createdAt": "2026-09-27T09:14:00.000Z",
+                      "text": "That sounds right. The shoulders fit well and I have room to move without the body feeling oversized.",
+                      "replies": [
+                        {
+                          "id": "review-1-reply-5",
+                          "author": "ThreadCraft Store",
+                          "authorType": "business",
+                          "createdAt": "2026-09-27T11:20:00.000Z",
+                          "text": "That is the fit we designed for. For care, a cool wash and a low tumble or air dry will help preserve the linen texture.",
+                          "replies": [
+                            {
+                              "id": "review-1-reply-6",
+                              "author": "Morgan Reed",
+                              "authorType": "customer",
+                              "createdAt": "2026-09-28T08:43:00.000Z",
+                              "text": "I washed the first one cold and hung it overnight. It softened up and did not noticeably shrink.",
+                              "replies": [
+                                {
+                                  "id": "review-1-reply-7",
+                                  "author": "ThreadCraft Store",
+                                  "authorType": "business",
+                                  "createdAt": "2026-09-28T10:06:00.000Z",
+                                  "text": "We appreciate the care update, Morgan. We will pass your fit notes to the product team."
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -30,19 +129,94 @@
       "id": "review-2",
       "author": "Taylor Brooks",
       "authorType": "customer",
+      "avatarBackgroundColor": "#FEF3C7",
+      "avatarTextColor": "#92400E",
       "createdAt": "2026-09-24T10:45:00.000Z",
       "text": "Looks great. The sleeves are a little long for me, but the quality is excellent.",
       "rating": 4,
-      "replies": []
+      "replies": [
+        {
+          "id": "review-2-reply-1",
+          "author": "ThreadCraft Store",
+          "authorType": "business",
+          "createdAt": "2026-09-24T13:16:00.000Z",
+          "text": "Thank you for the detailed feedback. The cuff can be rolled once without adding bulk, and we have shared your sleeve note with our fit team."
+        }
+      ]
     },
     {
       "id": "review-3",
       "author": "Casey Rivera",
       "authorType": "customer",
+      "authorAvatarUrl": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=96&h=96&fit=crop&crop=faces",
       "createdAt": "2026-09-22T17:05:00.000Z",
-      "text": "Lightweight and breathable. Perfect for warm weather.",
+      "text": "Lightweight and breathable. I wore it on a warm walk and stayed comfortable all afternoon.",
       "rating": 5,
+      "attachments": [
+        {
+          "name": "linen-shirt-outdoors.jpg",
+          "url": "https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=420",
+          "mimeType": "image/jpeg"
+        }
+      ],
       "replies": []
-    }
+    },
+    { "id": "review-4", "author": "Jamie Wilson", "authorType": "customer", "createdAt": "2026-09-21T09:18:00.000Z", "text": "The natural color is exactly as pictured, and the linen has a nice weight without feeling stiff.", "rating": 5, "reactions": { "❤️": 2 }, "replies": [] },
+    { "id": "review-5", "author": "Mina Lopez", "authorType": "customer", "createdAt": "2026-09-21T11:42:00.000Z", "text": "The natural color is exactly as pictured, and the garment-washed linen feels soft from the first wear.", "rating": 5, "replies": [{ "id": "review-5-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-09-21T13:18:00.000Z", "text": "We are happy the natural shade worked for you. Thanks for mentioning the soft finish." }] },
+    { "id": "review-6", "author": "Riley Thompson", "authorType": "customer", "createdAt": "2026-09-20T14:27:00.000Z", "text": "The linen has enough weight to hang well without feeling heavy. I wore it through a long workday and stayed comfortable.", "rating": 5, "replies": [] },
+    { "id": "review-7", "author": "Riley Thompson", "authorType": "customer", "createdAt": "2026-09-20T16:03:00.000Z", "text": "The collar arrived creased from shipping, but a quick steam took care of it. The rest of the shirt looks great.", "rating": 4, "replies": [{ "id": "review-7-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-09-20T17:21:00.000Z", "text": "Linen can crease in transit. We are reviewing how the shirts are folded in the mailer." }] },
+    { "id": "review-8", "author": "Avery Patel", "authorType": "customer", "createdAt": "2026-09-19T12:33:00.000Z", "text": "I sized down based on the chart and the fit is neat without pulling at the buttons. The measurements were accurate.", "rating": 5, "replies": [] },
+    { "id": "review-9", "author": "Logan Brooks", "authorType": "customer", "createdAt": "2026-09-18T08:54:00.000Z", "text": "The white color is clean and easy to style. I would have liked a note on the product page about wearing a base layer in direct sun.", "rating": 3, "replies": [] },
+    { "id": "review-10", "author": "Logan Brooks", "authorType": "customer", "createdAt": "2026-09-18T10:28:00.000Z", "text": "The white linen is comfortable, but more transparent in bright sunlight than I expected.", "rating": 3, "replies": [{ "id": "review-10-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-09-18T12:02:00.000Z", "text": "We appreciate the honest note and will make the fabric opacity clearer in the product details." }] },
+    { "id": "review-11", "author": "Harper Green", "authorType": "customer", "createdAt": "2026-09-17T16:42:00.000Z", "text": "Wore it to work with chinos and got two compliments. It looks polished even when I leave it untucked.", "rating": 5, "replies": [] },
+    { "id": "review-12", "author": "Elliot Moore", "authorType": "customer", "createdAt": "2026-09-16T11:07:00.000Z", "text": "The medium fits comfortably across my chest and shoulders, with enough room to layer a light tee underneath.", "rating": 5, "replies": [] },
+    { "id": "review-13", "author": "Elliot Moore", "authorType": "customer", "createdAt": "2026-09-16T13:39:00.000Z", "text": "The medium fits my chest and shoulders, though I wish the body were about an inch shorter.", "rating": 4, "replies": [{ "id": "review-13-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-09-16T15:10:00.000Z", "text": "Thanks for sharing your proportions and fit preference. We are collecting feedback on shirt length for our next pattern review." }] },
+    { "id": "review-14", "author": "Skylar Davis", "authorType": "customer", "createdAt": "2026-09-15T09:31:00.000Z", "text": "The parcel arrived two days earlier than the estimate, and the shirt was packed in recyclable paper.", "rating": 5, "replies": [] },
+    { "id": "review-15", "author": "Parker Young", "authorType": "customer", "createdAt": "2026-09-14T18:16:00.000Z", "text": "Comfortable in humid weather and easy to layer under a light jacket. The buttons feel secure.", "rating": 5, "replies": [] },
+    { "id": "review-16", "author": "Quinn Baker", "authorType": "customer", "createdAt": "2026-09-13T13:52:00.000Z", "text": "The blue shirt is soft straight out of the package. The buttons are secure and the seams look neatly finished.", "rating": 5, "replies": [] },
+    { "id": "review-17", "author": "Quinn Parker", "authorType": "customer", "createdAt": "2026-09-13T15:24:00.000Z", "text": "The blue is a little brighter than my monitor showed, but it is a lovely color in person.", "rating": 4, "replies": [{ "id": "review-17-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-09-13T17:05:00.000Z", "text": "Screens can shift color slightly. We are adding daylight photos of the blue shade so customers can compare it more easily." }] },
+    { "id": "review-18", "author": "Emerson Hall", "authorType": "customer", "createdAt": "2026-09-12T10:11:00.000Z", "text": "I followed the wash label and air-dried the shirt. It kept its shape and feels even softer now.", "rating": 5, "replies": [] },
+    { "id": "review-19", "author": "Rowan Scott", "authorType": "customer", "createdAt": "2026-09-11T07:48:00.000Z", "text": "The fabric and stitching are excellent. I would prefer one extra button near the bottom when wearing the shirt untucked.", "rating": 4, "replies": [] },
+    { "id": "review-20", "author": "Rowan Scott", "authorType": "customer", "createdAt": "2026-09-11T09:22:00.000Z", "text": "Good everyday shirt, but the first button sits a little high for how I like to wear an open collar.", "rating": 4, "replies": [{ "id": "review-20-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-09-11T10:58:00.000Z", "text": "Thanks for the collar feedback. We will include that in the next sample review with our garment team." }] },
+    { "id": "review-21", "author": "Finley Adams", "authorType": "customer", "createdAt": "2026-09-10T15:34:00.000Z", "text": "I bought this for a beach trip. It packed small, dried quickly, and did not feel clammy after a long day outside.", "rating": 5, "replies": [] },
+    { "id": "review-22", "author": "Dakota Lewis", "authorType": "customer", "createdAt": "2026-09-09T12:19:00.000Z", "text": "The size chart was accurate once I measured my shoulders. The shirt drapes nicely and does not pull when I reach forward.", "rating": 5, "replies": [] },
+    { "id": "review-23", "author": "Dakota Lewis", "authorType": "customer", "createdAt": "2026-09-09T14:57:00.000Z", "text": "The small was too narrow across my back, but exchanging for a medium was straightforward and free.", "rating": 4, "replies": [{ "id": "review-23-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-09-09T16:31:00.000Z", "text": "We are glad the exchange was easy. Our fit guide includes a shoulder measurement to help with future orders." }] },
+    { "id": "review-24", "author": "Reese Carter", "authorType": "customer", "createdAt": "2026-09-08T08:36:00.000Z", "text": "The stitching is tidy and there were no loose threads. It feels like a shirt I will keep wearing for years.", "rating": 5, "replies": [] },
+    { "id": "review-25", "author": "Alex Morgan", "authorType": "customer", "createdAt": "2026-09-07T19:05:00.000Z", "text": "I like the relaxed cut, but the cuffs are snug when I roll the sleeves. Unbuttoning the cuff makes them comfortable.", "rating": 4, "replies": [] },
+    { "id": "review-26", "author": "Blake Turner", "authorType": "customer", "createdAt": "2026-09-06T10:53:00.000Z", "text": "The olive shade is understated and looks good with navy trousers. The relaxed shape works well untucked.", "rating": 5, "replies": [] },
+    { "id": "review-27", "author": "Blake Turner", "authorType": "customer", "createdAt": "2026-09-06T13:27:00.000Z", "text": "I took the olive shirt on a weekend trip. It paired easily with jeans and stayed comfortable in the heat.", "rating": 5, "replies": [{ "id": "review-27-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-09-06T15:02:00.000Z", "text": "Olive has become a favorite for travel. Thank you for describing how it worked for your trip." }] },
+    { "id": "review-28", "author": "Cameron Price", "authorType": "customer", "createdAt": "2026-09-05T14:46:00.000Z", "text": "I had a question about care before washing and support answered with clear instructions the same afternoon.", "rating": 5, "replies": [] },
+    { "id": "review-29", "author": "Cameron Price", "authorType": "customer", "createdAt": "2026-09-05T16:30:00.000Z", "text": "One button was sewn loosely on arrival. Support sent a replacement button kit the same afternoon.", "rating": 4, "replies": [{ "id": "review-29-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-09-05T18:04:00.000Z", "text": "We are sorry about the loose button and have flagged the batch for an extra button check." }] },
+    { "id": "review-30", "author": "Drew Phillips", "authorType": "customer", "createdAt": "2026-09-04T11:28:00.000Z", "text": "The fabric has natural slubs that make each shirt look a little different. That texture is exactly what I wanted.", "rating": 5, "replies": [] },
+    { "id": "review-31", "author": "Kendall Ward", "authorType": "customer", "createdAt": "2026-09-03T09:02:00.000Z", "text": "The natural texture makes the shirt look relaxed without being sloppy. It pairs easily with both jeans and work trousers.", "rating": 5, "replies": [] },
+    { "id": "review-32", "author": "Kendall Ward", "authorType": "customer", "createdAt": "2026-09-03T11:41:00.000Z", "text": "I prefer the relaxed linen look and now just steam the shirt briefly instead of ironing it flat.", "rating": 4, "replies": [{ "id": "review-32-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-09-03T13:13:00.000Z", "text": "A light steam smooths the bigger folds while keeping the linen texture. Thanks for the care tip." }] },
+    { "id": "review-33", "author": "Arden Bailey", "authorType": "customer", "createdAt": "2026-09-02T16:18:00.000Z", "text": "I am between sizes and chose the larger one. It drapes nicely, especially tucked into high-waisted trousers.", "rating": 5, "replies": [] },
+    { "id": "review-34", "author": "Sydney Cooper", "authorType": "customer", "createdAt": "2026-09-01T12:44:00.000Z", "text": "The shirt fits well, but the fabric felt rougher than expected before the first wash. It softened after washing.", "rating": 3, "replies": [] },
+    { "id": "review-35", "author": "Sydney Cooper", "authorType": "customer", "createdAt": "2026-09-01T15:13:00.000Z", "text": "Tracking did not update for four days, although the shirt arrived in good condition once the parcel moved.", "rating": 3, "replies": [{ "id": "review-35-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-09-01T16:49:00.000Z", "text": "We are sorry the tracking was quiet. We shared the carrier delay with our shipping team and are glad the parcel arrived safely." }] },
+    { "id": "review-36", "author": "Remy Collins", "authorType": "customer", "createdAt": "2026-08-31T08:26:00.000Z", "text": "The natural shirt works with almost everything in my closet. The pocket is useful without making the front look busy.", "rating": 5, "replies": [] },
+    { "id": "review-37", "author": "Charlie Bell", "authorType": "customer", "createdAt": "2026-08-30T17:39:00.000Z", "text": "The fabric weight is ideal for warm weather, and after a few wears it has softened without losing its shape.", "rating": 5, "replies": [] },
+    { "id": "review-38", "author": "Charlie Bell", "authorType": "customer", "createdAt": "2026-08-30T19:02:00.000Z", "text": "The fit is roomy at the waist. I would love a slim option, but the quality and finish are very good.", "rating": 4, "replies": [{ "id": "review-38-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-08-30T20:37:00.000Z", "text": "We currently offer the relaxed cut and have passed your request for another fit to the design team." }] },
+    { "id": "review-39", "author": "Frankie Rivera", "authorType": "customer", "createdAt": "2026-08-29T10:35:00.000Z", "text": "Bought one for my partner and ended up ordering one for myself. The fabric is cool without feeling delicate.", "rating": 5, "replies": [] },
+    { "id": "review-40", "author": "Robin Murphy", "authorType": "customer", "createdAt": "2026-08-28T13:57:00.000Z", "text": "The white shirt looks crisp with a blazer and the relaxed cut gives enough room at the shoulders.", "rating": 5, "replies": [] },
+    { "id": "review-41", "author": "Robin Murphy", "authorType": "customer", "createdAt": "2026-08-28T16:22:00.000Z", "text": "The white shirt is a staple, but I wear a light undershirt because it is a little sheer in direct sun.", "rating": 4, "replies": [{ "id": "review-41-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-08-28T17:56:00.000Z", "text": "We appreciate the practical note. We will make the white fabric photos less studio-lit so the weight is easier to judge." }] },
+    { "id": "review-42", "author": "Jules Bennett", "authorType": "customer", "createdAt": "2026-08-27T09:47:00.000Z", "text": "The package included a handwritten thank-you card. Small touch, but it made the order feel thoughtful.", "rating": 5, "replies": [] },
+    { "id": "review-43", "author": "Eden Morris", "authorType": "customer", "createdAt": "2026-08-26T15:08:00.000Z", "text": "After three washes the seams are straight and the color has not faded. I use the gentle cycle and hang it to dry.", "rating": 5, "replies": [] },
+    { "id": "review-44", "author": "Kai Robinson", "authorType": "customer", "createdAt": "2026-08-25T11:16:00.000Z", "text": "The inside seams lie flat and do not rub, even after wearing the shirt all day in warm weather.", "rating": 5, "replies": [] },
+    { "id": "review-45", "author": "Kai Robinson", "authorType": "customer", "createdAt": "2026-08-25T13:49:00.000Z", "text": "I wish the care label were printed on softer material. The shirt itself is comfortable against my skin.", "rating": 4, "replies": [{ "id": "review-45-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-08-25T15:20:00.000Z", "text": "Thank you for pointing out the label. We are reviewing a softer printed label for the next production run." }] },
+    { "id": "review-46", "author": "Marley Cook", "authorType": "customer", "createdAt": "2026-08-24T18:32:00.000Z", "text": "I wore it through a full travel day and it stayed breathable. The wrinkles looked intentional by dinner.", "rating": 5, "replies": [] },
+    { "id": "review-47", "author": "Shiloh Reed", "authorType": "customer", "createdAt": "2026-08-23T09:25:00.000Z", "text": "The shirt washed well on a cool cycle and air-dried overnight with no visible shrinkage.", "rating": 5, "replies": [] },
+    { "id": "review-48", "author": "Shiloh Reed", "authorType": "customer", "createdAt": "2026-08-23T11:58:00.000Z", "text": "The small fits well in the shoulders, though the sleeves are a touch short when I reach forward.", "rating": 4, "replies": [{ "id": "review-48-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-08-23T13:30:00.000Z", "text": "We appreciate the sleeve feedback. Our fit team would be glad to compare your usual sleeve length with the pattern." }] },
+    { "id": "review-49", "author": "Tatum Gray", "authorType": "customer", "createdAt": "2026-08-22T14:03:00.000Z", "text": "The exchange process was simple when I needed to go up a size. The replacement arrived with a prepaid return label.", "rating": 5, "replies": [] },
+    { "id": "review-50", "author": "Payton Flores", "authorType": "customer", "createdAt": "2026-08-21T10:39:00.000Z", "text": "The charcoal color is a good alternative to black and looks smart without feeling formal.", "rating": 5, "replies": [] },
+    { "id": "review-51", "author": "Payton Flores", "authorType": "customer", "createdAt": "2026-08-21T13:06:00.000Z", "text": "Nice fabric and color, but the chest pocket sits slightly high on my frame. Otherwise a dependable summer shirt.", "rating": 4, "replies": [{ "id": "review-51-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-08-21T14:42:00.000Z", "text": "Thanks for the pocket placement note. We will add it to the pattern feedback alongside sleeve and length requests." }] },
+    { "id": "review-52", "author": "Micah Sanders", "authorType": "customer", "createdAt": "2026-08-20T08:58:00.000Z", "text": "I ordered the charcoal shade for a casual wedding. It looked sharp with a jacket and stayed comfortable outdoors.", "rating": 5, "replies": [] },
+    { "id": "review-53", "author": "Lennon Hughes", "authorType": "customer", "createdAt": "2026-08-19T16:21:00.000Z", "text": "The collar keeps its shape after washing and the front placket lies flat when buttoned.", "rating": 5, "replies": [] },
+    { "id": "review-54", "author": "Lennon Hughes", "authorType": "customer", "createdAt": "2026-08-19T18:47:00.000Z", "text": "The shirt arrived with a faint crease line from the packaging, but it disappeared after the first wash.", "rating": 4, "replies": [{ "id": "review-54-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-08-19T20:15:00.000Z", "text": "We are glad the first wash removed the crease. We are testing a flatter fold to reduce marks during transit." }] },
+    { "id": "review-55", "author": "Dallas Perry", "authorType": "customer", "createdAt": "2026-08-18T12:14:00.000Z", "text": "The buttons have a nice matte finish and match the natural fabric. Nothing feels flimsy or overly shiny.", "rating": 5, "replies": [] },
+    { "id": "review-56", "author": "Indigo Bailey", "authorType": "customer", "createdAt": "2026-08-17T09:43:00.000Z", "text": "The support team answered my sizing question before I ordered, so I got the right fit on the first try.", "rating": 5, "replies": [] },
+    { "id": "review-57", "author": "Indigo Bailey", "authorType": "customer", "createdAt": "2026-08-17T11:17:00.000Z", "text": "I chose the wrong size from the chart and support helped me swap it before the order shipped.", "rating": 5, "replies": [{ "id": "review-57-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-08-17T12:48:00.000Z", "text": "Happy we caught the size change in time. Thanks for reaching out before dispatch." }] },
+    { "id": "review-58", "author": "Sage Mitchell", "authorType": "customer", "createdAt": "2026-08-16T15:56:00.000Z", "text": "I have sensitive skin and find the softened linen comfortable all day. The inside seams are finished smoothly.", "rating": 5, "replies": [] },
+    { "id": "review-59", "author": "River Hayes", "authorType": "customer", "createdAt": "2026-08-15T10:32:00.000Z", "text": "A little expensive for a single shirt, but the stitching, fabric, and customer service have made it worth keeping.", "rating": 4, "replies": [] },
+    { "id": "review-60", "author": "Jaden Perez", "authorType": "customer", "createdAt": "2026-08-14T13:11:00.000Z", "text": "Thoughtful packaging, responsive support, and linen that feels better each time I wear it. I am pleased with this purchase.", "rating": 5, "replies": [{ "id": "review-60-reply-1", "author": "ThreadCraft Store", "authorType": "business", "createdAt": "2026-08-14T14:45:00.000Z", "text": "Thank you for choosing ThreadCraft. We appreciate you sharing your experience and hope you enjoy the shirt for years." }] }
   ]
 }

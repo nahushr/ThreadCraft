@@ -8,8 +8,21 @@ import { fetchMoreIssueComments, fetchMoreReviews } from "./mockApi";
 type ExampleMode = "issue" | "review";
 type PreviewMode = "desktop" | "phone";
 
-const issueData = issueFixture as ThreadCraftData;
-const reviewData = reviewFixture as ThreadCraftData;
+const FIRST_PAGE_SIZE = 50;
+const issueFixtureData = issueFixture as ThreadCraftData;
+const reviewFixtureData = reviewFixture as ThreadCraftData;
+const issueData: ThreadCraftData = {
+  ...issueFixtureData,
+  comments: issueFixtureData.comments.slice(0, FIRST_PAGE_SIZE),
+  hasMore: issueFixtureData.comments.length > FIRST_PAGE_SIZE,
+  totalRootComments: issueFixtureData.comments.length,
+};
+const reviewData: ThreadCraftData = {
+  ...reviewFixtureData,
+  comments: reviewFixtureData.comments.slice(0, FIRST_PAGE_SIZE),
+  hasMore: reviewFixtureData.comments.length > FIRST_PAGE_SIZE,
+  totalRootComments: reviewFixtureData.comments.length,
+};
 
 export default function App() {
   const [mode, setMode] = useState<ExampleMode>("issue");

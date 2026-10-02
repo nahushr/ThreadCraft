@@ -190,6 +190,7 @@ const Discussion = ({
             <CommentThread
               key={comment.id}
               comment={comment}
+              authorTypeStyles={data.authorTypeStyles}
               depth={0}
               showRating={showRating}
               allowReplies={allowReplies}

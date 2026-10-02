@@ -10,6 +10,21 @@ export interface ThreadCraftAttachment {
 
 export type ThreadCraftAttachmentInput = string | ThreadCraftAttachment;
 
+/** Appearance overrides for comments with a matching authorType. Color values accept any CSS color. */
+export interface ThreadCraftAuthorTypeStyle {
+  label?: string;
+  color?: string;
+  backgroundColor?: string;
+  borderColor?: string;
+  icon?: string;
+  cardColor?: string;
+  cardBorderColor?: string;
+  cardTextColor?: string;
+  avatarBackgroundColor?: string;
+  avatarTextColor?: string;
+  avatarBorderColor?: string;
+}
+
 /** A discussion node. Supply `replies` for nested JSON or parent/quote IDs for flat API data. */
 export interface ThreadCraftComment {
   id: ThreadCraftId;
@@ -17,6 +32,12 @@ export interface ThreadCraftComment {
   text?: string;
   body?: string;
   authorAvatarUrl?: string;
+  avatarBackgroundColor?: string;
+  avatarTextColor?: string;
+  avatarBorderColor?: string;
+  cardColor?: string;
+  cardBorderColor?: string;
+  cardTextColor?: string;
   createdAt?: string;
   parentId?: ThreadCraftId | null;
   quotedCommentId?: ThreadCraftId | null;
@@ -44,6 +65,8 @@ export interface ThreadCraftData {
   status?: string;
   url?: string;
   comments: ThreadCraftComment[];
+  /** Per-role labels, chip colors, card colors, icons, and avatar color defaults. */
+  authorTypeStyles?: Record<string, ThreadCraftAuthorTypeStyle>;
   /** Set true on review data to show and collect star ratings. */
   showRating?: boolean;
   /** Set when the first page is partial and an async load-more handler is supplied. */

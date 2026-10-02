@@ -104,6 +104,7 @@ export function DiscussionExample() {
 | `status` | `string` | | Issue status, such as `"Open"` |
 | `url` | `string` | | Link to the source issue or product |
 | `comments` | `ThreadCraftComment[]` | ✓ | Initial comment page; nested or flat |
+| `authorTypeStyles` | `Record<string, ThreadCraftAuthorTypeStyle>` | | Custom chip, card, and avatar colors by `authorType` |
 | `showRating` | `boolean` | | Set `true` for review stars and root review rating input |
 | `hasMore` | `boolean` | | Whether more root comments are available |
 | `totalRootComments` | `number` | | Total root count shown in the discussion heading |
@@ -117,6 +118,12 @@ export function DiscussionExample() {
 | `text` | `string` | Preferred comment content |
 | `body` | `string` | Content alias; `text` takes precedence |
 | `authorAvatarUrl` | `string` | Author avatar URL |
+| `avatarBackgroundColor` | `string` | Per-user initials avatar background override |
+| `avatarTextColor` | `string` | Per-user initials avatar text override |
+| `avatarBorderColor` | `string` | Per-user avatar border override |
+| `cardColor` | `string` | Per-comment card background override |
+| `cardBorderColor` | `string` | Per-comment card border override |
+| `cardTextColor` | `string` | Per-comment card text override |
 | `createdAt` | `string` | Comment timestamp |
 | `parentId` | `string \| number \| null` | Flat reply parent; `null` marks a root |
 | `quotedCommentId` | `string \| number \| null` | Alternative flat reply parent |
@@ -130,6 +137,26 @@ export function DiscussionExample() {
 | `isCustomer` | `boolean` | Legacy customer-author flag |
 | `isMine` | `boolean` | Legacy flag treated as customer-authored |
 | `authorType` | `string` | `customer`, `business`, `support`, `bot`, or custom role |
+
+### Author type style: `ThreadCraftAuthorTypeStyle`
+
+Add styles to `ThreadCraftData.authorTypeStyles`, keyed by the comment's `authorType`. Styles apply to that role on every nesting level. Per-comment avatar and card colors override role defaults.
+
+Color values accept CSS color formats such as hex, `rgb()`, `hsl()`, and named colors. `authorAvatarUrl` accepts an image URL or data URL and replaces the initials avatar.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `label` | `string` | Chip text, e.g. `"Verified buyer"` |
+| `color` | `string` | Chip label and icon color; any CSS color |
+| `backgroundColor` | `string` | Chip background color |
+| `borderColor` | `string` | Chip border color |
+| `icon` | `string` | Emoji or text shown before the chip label |
+| `cardColor` | `string` | Default comment card background for this role |
+| `cardBorderColor` | `string` | Default comment card border for this role |
+| `cardTextColor` | `string` | Default comment text color for this role |
+| `avatarBackgroundColor` | `string` | Default initials avatar background for this role |
+| `avatarTextColor` | `string` | Default initials color for this role |
+| `avatarBorderColor` | `string` | Default avatar border for this role |
 
 ### Attachment: `ThreadCraftAttachmentInput`
 
@@ -162,13 +189,60 @@ export function DiscussionExample() {
   "status": "Open",
   "url": "https://github.com/example/app/issues/842",
   "hasMore": true,
-  "totalRootComments": 113,
+  "totalRootComments": 60,
+  "authorTypeStyles": {
+    "customer": {
+      "label": "Customer",
+      "color": "#2546A8",
+      "backgroundColor": "#EEF2FF",
+      "borderColor": "#C7D2FE",
+      "icon": "👤",
+      "cardColor": "#F3F5FF",
+      "cardBorderColor": "#D7DFFF",
+      "cardTextColor": "#24304A",
+      "avatarBackgroundColor": "#E5ECFF",
+      "avatarTextColor": "#315EFB",
+      "avatarBorderColor": "#FFFFFF"
+    },
+    "business": {
+      "label": "Business",
+      "color": "#087E70",
+      "backgroundColor": "#E8FAF5",
+      "borderColor": "#A7F3D0",
+      "icon": "🏪",
+      "cardColor": "#EFFBF7",
+      "cardBorderColor": "#BDEBDD",
+      "cardTextColor": "#1D3B35",
+      "avatarBackgroundColor": "#D8F5EA",
+      "avatarTextColor": "#087E70",
+      "avatarBorderColor": "#FFFFFF"
+    },
+    "support": {
+      "label": "Support",
+      "color": "#673AB7",
+      "backgroundColor": "#F3EDFF",
+      "borderColor": "#D9C7FF",
+      "icon": "🛠️",
+      "cardColor": "#FBF8FF",
+      "cardBorderColor": "#E6D9FF",
+      "cardTextColor": "#352A4D",
+      "avatarBackgroundColor": "#EFE6FF",
+      "avatarTextColor": "#6941C6",
+      "avatarBorderColor": "#FFFFFF"
+    }
+  },
   "comments": [
     {
       "id": "issue-1",
       "author": "Priya Shah",
       "authorType": "customer",
       "authorAvatarUrl": "https://example.com/priya.png",
+      "avatarBackgroundColor": "#DBEAFE",
+      "avatarTextColor": "#1D4ED8",
+      "avatarBorderColor": "#FFFFFF",
+      "cardColor": "#FFF7ED",
+      "cardBorderColor": "#FED7AA",
+      "cardTextColor": "#7C2D12",
       "createdAt": "2026-09-28T15:04:00.000Z",
       "text": "I can reproduce this in Chrome.",
       "reactions": { "👍": 2, "❤️": 1 },
@@ -187,6 +261,7 @@ export function DiscussionExample() {
           "id": "issue-1-reply",
           "author": "Maya Chen",
           "authorType": "support",
+          "authorAvatarUrl": "https://example.com/maya.png",
           "createdAt": "2026-09-28T15:31:00.000Z",
           "parentId": "issue-1",
           "quotedCommentId": "issue-1",
@@ -227,12 +302,56 @@ export function DiscussionExample() {
   "url": "https://example.com/products/linen-shirt",
   "showRating": true,
   "hasMore": true,
-  "totalRootComments": 107,
+  "totalRootComments": 60,
+  "authorTypeStyles": {
+    "customer": {
+      "label": "Verified buyer",
+      "color": "#2546A8",
+      "backgroundColor": "#EEF2FF",
+      "borderColor": "#C7D2FE",
+      "icon": "🛍️",
+      "cardColor": "#F3F5FF",
+      "cardBorderColor": "#D7DFFF",
+      "cardTextColor": "#24304A",
+      "avatarBackgroundColor": "#E5ECFF",
+      "avatarTextColor": "#315EFB",
+      "avatarBorderColor": "#FFFFFF"
+    },
+    "business": {
+      "label": "ThreadCraft Store",
+      "color": "#087E70",
+      "backgroundColor": "#E8FAF5",
+      "borderColor": "#A7F3D0",
+      "icon": "🏪",
+      "cardColor": "#EFFBF7",
+      "cardBorderColor": "#BDEBDD",
+      "cardTextColor": "#1D3B35",
+      "avatarBackgroundColor": "#D8F5EA",
+      "avatarTextColor": "#087E70",
+      "avatarBorderColor": "#FFFFFF"
+    },
+    "support": {
+      "label": "Support",
+      "color": "#673AB7",
+      "backgroundColor": "#F3EDFF",
+      "borderColor": "#D9C7FF",
+      "icon": "💬",
+      "cardColor": "#FBF8FF",
+      "cardBorderColor": "#E6D9FF",
+      "cardTextColor": "#352A4D",
+      "avatarBackgroundColor": "#EFE6FF",
+      "avatarTextColor": "#6941C6",
+      "avatarBorderColor": "#FFFFFF"
+    }
+  },
   "comments": [
     {
       "id": "review-1",
       "author": "Morgan Reed",
       "authorType": "customer",
+      "authorAvatarUrl": "https://example.com/morgan.png",
+      "avatarBackgroundColor": "#FCE7F3",
+      "avatarTextColor": "#9D174D",
       "createdAt": "2026-09-26T13:20:00.000Z",
       "text": "Comfortable fabric and a good fit.",
       "rating": 5,
@@ -243,6 +362,7 @@ export function DiscussionExample() {
           "id": "review-1-reply",
           "author": "ThreadCraft Store",
           "authorType": "business",
+          "authorAvatarUrl": "https://example.com/store.png",
           "text": "Thanks for sharing your experience!",
           "replies": []
         }
@@ -282,7 +402,7 @@ export function DiscussionExample() {
 | Export | Kind |
 |---|---|
 | `GitHubIssueThread`, `ReviewThread`, `ThreadedDiscussion` | Components |
-| `ThreadCraftId`, `ThreadCraftAttachment`, `ThreadCraftAttachmentInput`, `ThreadCraftComment`, `ThreadCraftData`, `ThreadCraftDiscussionProps`, `ThreadCraftLoadMoreRequest`, `ThreadCraftLoadMoreResult`, `ThreadCraftReplyAuthorType`, `ThreadCraftSubmitPayload` | Types |
+| `ThreadCraftId`, `ThreadCraftAttachment`, `ThreadCraftAttachmentInput`, `ThreadCraftAuthorTypeStyle`, `ThreadCraftComment`, `ThreadCraftData`, `ThreadCraftDiscussionProps`, `ThreadCraftLoadMoreRequest`, `ThreadCraftLoadMoreResult`, `ThreadCraftReplyAuthorType`, `ThreadCraftSubmitPayload` | Types |
 | `buildCommentTree`, `appendReplyToTree`, `appendUniqueRootComments`, `countRootComments` | Helpers |
 
 ## Development

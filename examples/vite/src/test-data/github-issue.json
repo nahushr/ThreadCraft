@@ -4,16 +4,60 @@
   "title": "Export button stays disabled after choosing a date range",
   "author": "Priya Shah",
   "createdAt": "2026-09-28T14:32:00.000Z",
-  "status": "Open",
+  "status": "Closed",
   "url": "https://github.com/",
   "body": "The export button stays disabled after I choose a valid date range. Refreshing the page fixes it temporarily.",
   "hasMore": true,
-  "totalRootComments": 113,
+  "totalRootComments": 60,
+  "authorTypeStyles": {
+    "customer": {
+      "label": "Customer",
+      "color": "#2546A8",
+      "backgroundColor": "#EEF2FF",
+      "borderColor": "#C7D2FE",
+      "icon": "👤",
+      "cardColor": "#F3F5FF",
+      "cardBorderColor": "#D7DFFF",
+      "cardTextColor": "#24304A",
+      "avatarBackgroundColor": "#E5ECFF",
+      "avatarTextColor": "#315EFB",
+      "avatarBorderColor": "#FFFFFF"
+    },
+    "business": {
+      "label": "Business",
+      "color": "#087E70",
+      "backgroundColor": "#E8FAF5",
+      "borderColor": "#A7F3D0",
+      "icon": "🏪",
+      "cardColor": "#EFFBF7",
+      "cardBorderColor": "#BDEBDD",
+      "cardTextColor": "#1D3B35",
+      "avatarBackgroundColor": "#D8F5EA",
+      "avatarTextColor": "#087E70",
+      "avatarBorderColor": "#FFFFFF"
+    },
+    "support": {
+      "label": "Support",
+      "color": "#673AB7",
+      "backgroundColor": "#F3EDFF",
+      "borderColor": "#D9C7FF",
+      "icon": "🛠️",
+      "cardColor": "#FBF8FF",
+      "cardBorderColor": "#E6D9FF",
+      "cardTextColor": "#352A4D",
+      "avatarBackgroundColor": "#EFE6FF",
+      "avatarTextColor": "#6941C6",
+      "avatarBorderColor": "#FFFFFF"
+    }
+  },
   "comments": [
     {
       "id": "issue-1",
       "author": "Priya Shah",
       "authorType": "customer",
+      "authorAvatarUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=96&h=96&fit=crop&crop=faces",
+      "avatarBackgroundColor": "#DBEAFE",
+      "avatarTextColor": "#1D4ED8",
       "createdAt": "2026-09-28T15:04:00.000Z",
       "text": "I can reproduce this in Chrome 129 on macOS. The date picker shows the correct range, but the action never enables.",
       "reactions": { "👍": 2, "❤️": 1 },
@@ -31,7 +75,52 @@
               "author": "Priya Shah",
               "authorType": "customer",
               "createdAt": "2026-09-28T15:42:00.000Z",
-              "text": "That matches what I am seeing. Thank you!"
+              "text": "That matches what I am seeing. I can test a preview build if that helps.",
+              "replies": [
+                {
+                  "id": "issue-1-reply-3",
+                  "author": "Maya Chen",
+                  "authorType": "support",
+                  "createdAt": "2026-09-28T16:02:00.000Z",
+                  "text": "A preview would be useful. Could you also try a range that crosses into a new month?",
+                  "replies": [
+                    {
+                      "id": "issue-1-reply-4",
+                      "author": "Priya Shah",
+                      "authorType": "customer",
+                      "createdAt": "2026-09-28T16:18:00.000Z",
+                      "text": "I tried July 29 through August 3. The dates remain selected, but Export is still disabled.",
+                      "replies": [
+                        {
+                          "id": "issue-1-reply-5",
+                          "author": "Maya Chen",
+                          "authorType": "support",
+                          "createdAt": "2026-09-28T16:46:00.000Z",
+                          "text": "That confirms the timezone normalization bug. We are checking the end-of-day conversion now.",
+                          "replies": [
+                            {
+                              "id": "issue-1-reply-6",
+                              "author": "Priya Shah",
+                              "authorType": "customer",
+                              "createdAt": "2026-09-28T17:12:00.000Z",
+                              "text": "The same steps fail in Safari 18, so this does not look Chrome-specific.",
+                              "replies": [
+                                {
+                                  "id": "issue-1-reply-7",
+                                  "author": "Maya Chen",
+                                  "authorType": "support",
+                                  "createdAt": "2026-09-28T17:40:00.000Z",
+                                  "text": "The fix is in our beta build. We now compare calendar dates before converting the range to UTC; please let us know if your test passes."
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }
@@ -41,8 +130,9 @@
       "id": "issue-2",
       "author": "Jordan Lee",
       "authorType": "customer",
+      "authorAvatarUrl": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=96&h=96&fit=crop&crop=faces",
       "createdAt": "2026-09-28T16:10:00.000Z",
-      "text": "Same issue here. Adding an attachment so you can see the disabled button.",
+      "text": "Same issue here. The selected range is visible in the toolbar, but the export control stays disabled. Screenshot attached.",
       "attachments": [
         {
           "name": "disabled-export.png",
@@ -50,15 +140,89 @@
           "mimeType": "image/png"
         }
       ],
-      "replies": []
+      "replies": [
+        {
+          "id": "issue-2-reply-1",
+          "author": "Maya Chen",
+          "authorType": "support",
+          "createdAt": "2026-09-28T16:34:00.000Z",
+          "text": "I can see the mismatch in the screenshot. Does clearing the range and selecting it again enable the button?"
+        }
+      ]
     },
     {
       "id": "issue-3",
       "author": "Maya Chen",
       "authorType": "support",
+      "authorAvatarUrl": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=96&h=96&fit=crop&crop=faces",
       "createdAt": "2026-09-29T09:21:00.000Z",
-      "text": "We have a fix in review. I will update this thread once the release is available.",
-      "replies": []
-    }
+      "text": "We have a fix in review. It addresses a stale selection flag that was not refreshed after both dates were chosen.",
+      "replies": [
+        {
+          "id": "issue-3-reply-1",
+          "author": "Jordan Lee",
+          "authorType": "customer",
+          "createdAt": "2026-09-29T09:44:00.000Z",
+          "text": "Clearing and reselecting did not help on my account. Happy to retest when the fix ships."
+        }
+      ]
+    },
+    { "id": "issue-4", "author": "Elena Garcia", "authorType": "customer", "createdAt": "2026-09-29T10:06:00.000Z", "text": "Selecting the start date first and the end date second still leaves Export disabled until I refresh the report.", "reactions": { "👍": 1 }, "replies": [] },
+    { "id": "issue-5", "author": "Maya Chen", "authorType": "support", "avatarBackgroundColor": "#FCE7F3", "avatarTextColor": "#9D174D", "createdAt": "2026-09-29T10:28:00.000Z", "text": "We have isolated this to the range-change handler. The date inputs update correctly, but the export eligibility state can lag behind.", "replies": [] },
+    { "id": "issue-6", "author": "Noah Williams", "authorType": "customer", "createdAt": "2026-09-29T10:46:00.000Z", "text": "For comparison, exporting with the preset 'Last 30 days' works. Only manually selected ranges reproduce it for me.", "replies": [] },
+    { "id": "issue-7", "author": "Ava Patel", "authorType": "customer", "createdAt": "2026-09-29T11:03:00.000Z", "text": "I see it on Windows 11 in Edge 128. Changing the end date twice sometimes enables the button, but the resulting CSV is empty.", "replies": [] },
+    { "id": "issue-8", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-09-29T11:22:00.000Z", "text": "Thanks, Ava. An empty export would be a separate symptom of the same stale range value. We are adding that case to our regression checks.", "replies": [] },
+    { "id": "issue-9", "author": "Samir Khan", "authorType": "customer", "createdAt": "2026-09-29T11:48:00.000Z", "text": "My account is set to Europe/London. A range within one day works, while a range spanning the daylight-saving transition stays disabled.", "replies": [] },
+    { "id": "issue-10", "author": "Priya Shah", "authorType": "customer", "createdAt": "2026-09-29T12:11:00.000Z", "text": "I tested the workaround of opening the report in a new tab. The chosen dates survive, but the export action remains disabled.", "replies": [] },
+    { "id": "issue-11", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-09-29T12:35:00.000Z", "text": "We can reproduce the daylight-saving case. The comparison currently uses timestamps instead of the dates shown in the picker.", "replies": [] },
+    { "id": "issue-12", "author": "Liam O'Connor", "authorType": "customer", "createdAt": "2026-09-29T13:02:00.000Z", "text": "The keyboard flow has the same problem: after tabbing out of the end-date field, the selected range is valid but Export is unavailable.", "replies": [] },
+    { "id": "issue-13", "author": "Zoe Martin", "authorType": "customer", "createdAt": "2026-09-29T13:27:00.000Z", "text": "I can make the button appear by switching to another report and back. It is a useful temporary workaround, though the first export attempt still fails.", "replies": [] },
+    { "id": "issue-14", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-09-29T13:49:00.000Z", "text": "The report switch forces a full refresh of the selection state, which explains why that workaround helps. We are avoiding that extra reload in the fix.", "replies": [] },
+    { "id": "issue-15", "author": "Ethan Brooks", "authorType": "customer", "createdAt": "2026-09-29T14:12:00.000Z", "text": "This also happens with the custom date range in the activity export, not only the revenue report.", "replies": [] },
+    { "id": "issue-16", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-09-29T14:36:00.000Z", "text": "Good catch. Both export screens share the date-range control, so we will verify the patch in each one.", "replies": [] },
+    { "id": "issue-17", "author": "Isabella Chen", "authorType": "customer", "createdAt": "2026-09-29T15:01:00.000Z", "text": "If I choose the same day for both ends, Export enables. As soon as I extend the range by one day, it turns disabled again.", "replies": [] },
+    { "id": "issue-18", "author": "Oliver Smith", "authorType": "customer", "createdAt": "2026-09-29T15:24:00.000Z", "text": "The bug started after the September interface update. I did not see it in the previous version.", "replies": [] },
+    { "id": "issue-19", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-09-29T15:47:00.000Z", "text": "That lines up with the date-picker refactor in the September release. We have narrowed the regression to the new controlled input path.", "replies": [] },
+    { "id": "issue-20", "author": "Grace Kim", "authorType": "customer", "createdAt": "2026-09-29T16:15:00.000Z", "text": "A hard refresh fixes the button for one session, but navigating away and returning causes the issue again.", "replies": [] },
+    { "id": "issue-21", "author": "Daniel Foster", "authorType": "customer", "createdAt": "2026-09-29T16:41:00.000Z", "text": "I use a UTC+10 workspace. A range ending today appears to be treated as tomorrow when the server validates it.", "replies": [] },
+    { "id": "issue-22", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-09-29T17:06:00.000Z", "text": "We found an off-by-one conversion near midnight UTC. The fix will preserve the selected local calendar days end to end.", "replies": [] },
+    { "id": "issue-23", "author": "Mia Thompson", "authorType": "customer", "createdAt": "2026-09-29T17:29:00.000Z", "text": "The CSV export works if I use the quick range buttons, so this appears limited to the two manual date fields.", "replies": [] },
+    { "id": "issue-24", "author": "Lucas Brown", "authorType": "customer", "createdAt": "2026-09-29T18:02:00.000Z", "text": "I see the disabled state on Firefox 130 as well. It persists after signing out and back in.", "replies": [] },
+    { "id": "issue-25", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-09-29T18:24:00.000Z", "text": "We have confirmed Firefox is affected too. This is application state, not a browser cache issue.", "replies": [] },
+    { "id": "issue-26", "author": "Amara Johnson", "authorType": "customer", "createdAt": "2026-09-30T08:13:00.000Z", "text": "Our finance team cannot export a quarter-to-date report. Preset ranges remain usable, but we need a specific cutoff date.", "replies": [] },
+    { "id": "issue-27", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-09-30T08:42:00.000Z", "text": "We understand the impact for scheduled reporting. I will post here as soon as the patch is available to verify.", "replies": [] },
+    { "id": "issue-28", "author": "Henry Wilson", "authorType": "customer", "createdAt": "2026-09-30T09:07:00.000Z", "text": "When I paste dates into both fields, the range looks valid but Export stays inactive. Selecting the dates from the calendar has the same result.", "replies": [] },
+    { "id": "issue-29", "author": "Nina Park", "authorType": "customer", "createdAt": "2026-09-30T09:36:00.000Z", "text": "The issue occurs in an incognito window too, with extensions disabled and a fresh login.", "replies": [] },
+    { "id": "issue-30", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-09-30T10:02:00.000Z", "text": "That rules out extension interference. We appreciate the clean reproduction steps.", "replies": [] },
+    { "id": "issue-31", "author": "Theo Wilson", "authorType": "customer", "createdAt": "2026-09-30T10:29:00.000Z", "text": "The date labels are correct after switching the workspace timezone, but the export state does not recalculate until I reload.", "replies": [] },
+    { "id": "issue-32", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-09-30T10:55:00.000Z", "text": "Workspace timezone changes were missing a recalculation hook. We are including timezone changes in the same state refresh.", "replies": [] },
+    { "id": "issue-33", "author": "Sofia Alvarez", "authorType": "customer", "createdAt": "2026-09-30T11:24:00.000Z", "text": "I can reproduce with a one-week range and with a full year. Range length does not seem to matter.", "replies": [] },
+    { "id": "issue-34", "author": "Benjamin Scott", "authorType": "customer", "createdAt": "2026-09-30T11:53:00.000Z", "text": "For accessibility testing, the disabled state is announced correctly, but it never updates after both dates are entered.", "replies": [] },
+    { "id": "issue-35", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-09-30T12:19:00.000Z", "text": "Thanks for checking the screen reader behavior. The updated state notification is part of our keyboard and accessibility test plan.", "replies": [] },
+    { "id": "issue-36", "author": "Layla Hassan", "authorType": "customer", "createdAt": "2026-09-30T12:47:00.000Z", "text": "On an iPad, the calendar closes after I select the end date, but the export action stays gray until I rotate the screen.", "replies": [] },
+    { "id": "issue-37", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-09-30T13:16:00.000Z", "text": "The rotation forces a layout update and masks the stale state. We will add the tablet flow to the verification matrix.", "replies": [] },
+    { "id": "issue-38", "author": "Jack Turner", "authorType": "customer", "createdAt": "2026-09-30T13:42:00.000Z", "text": "I recorded the network panel: there is no export request while the button is disabled, even though the request preview contains both dates.", "replies": [] },
+    { "id": "issue-39", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-09-30T14:08:00.000Z", "text": "That is expected while the control is disabled. The request preview confirms the selected dates reach the client correctly.", "replies": [] },
+    { "id": "issue-40", "author": "Ruby Evans", "authorType": "customer", "createdAt": "2026-09-30T14:36:00.000Z", "text": "The affected report has a saved filter. Removing the filter did not change the disabled state.", "replies": [] },
+    { "id": "issue-41", "author": "Omar Ali", "authorType": "customer", "createdAt": "2026-09-30T15:03:00.000Z", "text": "I can export after clearing the dates and choosing a preset, then go back and manually select the dates. It takes a few tries.", "replies": [] },
+    { "id": "issue-42", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-09-30T15:31:00.000Z", "text": "That sequence refreshes the derived range value. We are using your steps as an additional regression case.", "replies": [] },
+    { "id": "issue-43", "author": "Chloe Davis", "authorType": "customer", "createdAt": "2026-09-30T16:01:00.000Z", "text": "My teammate and I both see it, but another teammate on the older dashboard layout can export normally.", "replies": [] },
+    { "id": "issue-44", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-09-30T16:28:00.000Z", "text": "The older layout uses the previous date selector. This confirms the regression is isolated to the new dashboard experience.", "replies": [] },
+    { "id": "issue-45", "author": "Mateo Ruiz", "authorType": "customer", "createdAt": "2026-10-01T08:17:00.000Z", "text": "This morning I can reproduce it on the staging workspace using the same account and browser as production.", "replies": [] },
+    { "id": "issue-46", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-10-01T08:45:00.000Z", "text": "The patch has passed our unit checks and is now in staging. We are validating CSV, XLSX, and scheduled exports.", "replies": [] },
+    { "id": "issue-47", "author": "Priya Shah", "authorType": "customer", "createdAt": "2026-10-01T09:12:00.000Z", "text": "I tested the staging build with the August 1–31 range. Export enabled immediately and the downloaded CSV contained the expected rows.", "reactions": { "🎉": 2 }, "replies": [] },
+    { "id": "issue-48", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-10-01T09:38:00.000Z", "text": "Excellent, thank you for checking both the button state and the exported rows. We are finishing the timezone test cases.", "replies": [] },
+    { "id": "issue-49", "author": "Ava Patel", "authorType": "customer", "createdAt": "2026-10-01T10:04:00.000Z", "text": "I retested in Edge on Windows with a range crossing the month boundary. The button enables correctly in staging.", "replies": [] },
+    { "id": "issue-50", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-10-01T10:32:00.000Z", "text": "The fix is queued for the next release after our final checks. We will keep this issue open until production is updated.", "replies": [] },
+    { "id": "issue-51", "author": "Samir Khan", "authorType": "customer", "createdAt": "2026-10-01T11:01:00.000Z", "text": "I verified the daylight-saving range in the staging workspace set to Europe/London. It now enables without a refresh.", "replies": [] },
+    { "id": "issue-52", "author": "Elena Garcia", "authorType": "customer", "createdAt": "2026-10-01T11:29:00.000Z", "text": "The manual range also works with the browser zoom set to 125%, which used to require clicking away from the picker.", "replies": [] },
+    { "id": "issue-53", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-10-01T11:56:00.000Z", "text": "We included zoom and narrow viewport checks to ensure the action state does not depend on a layout event.", "replies": [] },
+    { "id": "issue-54", "author": "Noah Williams", "authorType": "customer", "createdAt": "2026-10-01T12:24:00.000Z", "text": "I tested custom ranges in both the activity and revenue reports. Both export buttons are enabled now.", "replies": [] },
+    { "id": "issue-55", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-10-01T12:51:00.000Z", "text": "The production release is rolling out to a small group now. We will expand it after monitoring export errors.", "replies": [] },
+    { "id": "issue-56", "author": "Daniel Foster", "authorType": "customer", "createdAt": "2026-10-01T13:19:00.000Z", "text": "The UTC+10 workspace now treats today's end date as today. My morning report includes the correct final day.", "replies": [] },
+    { "id": "issue-57", "author": "Grace Kim", "authorType": "customer", "createdAt": "2026-10-01T13:47:00.000Z", "text": "After the rollout, I selected a custom range, navigated to another report, and returned. The selection remained usable.", "replies": [] },
+    { "id": "issue-58", "author": "Maya Chen", "authorType": "support", "createdAt": "2026-10-01T14:15:00.000Z", "text": "The rollout is complete. Please reply if you still see a disabled action after choosing both dates.", "replies": [] },
+    { "id": "issue-59", "author": "Jordan Lee", "authorType": "customer", "createdAt": "2026-10-01T14:44:00.000Z", "text": "Confirmed fixed on my account. The CSV download starts as soon as I select the end date.", "reactions": { "👍": 3 }, "replies": [] },
+    { "id": "issue-60", "author": "Priya Shah", "authorType": "customer", "createdAt": "2026-10-01T15:12:00.000Z", "text": "Production works for me now in Chrome and Safari, including ranges that cross a month and timezone boundary. Thanks for following through.", "replies": [] }
   ]
 }
