@@ -1,0 +1,165 @@
+name: Build, analyze, and publish ThreadCraft
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: threadcraft-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests and build the package
+        run: |
+          npm test
+          npm run build
+
+      - name: Build the Vite example
+        run: npm run build --workspace threadcraft-vite-example
+
+      - name: Verify the package contents
+        run: npm pack --dry-run
+
+  analyze:
+    name: Sonar, Snyk, and Checkstyle
+    needs: build
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out source with full history
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run SonarCloud analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          set -euo pipefail
+          npx --yes sonarqube-scanner@5.0.0 \
+            -Dsonar.token="$SONAR_TOKEN"
+
+      - name: Set up Snyk CLI
+        uses: snyk/actions/setup@806182742461562b67788a64410098c9d9b96adb
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Run Snyk dependency analysis
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk test --all-projects --severity-threshold=high
+
+      - name: Run Snyk Code analysis
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk code test --severity-threshold=high
+
+      - name: Run TypeScript checkstyle with ESLint
+        run: npm run lint
+
+  publish:
+    name: Publish to npm
+    needs: analyze
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Set up npm registry authentication
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          scope: '@threadcraft'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Select the next available patch version
+        id: release
+        env:
+          PACKAGE_NAME: "@threadcraft/react"
+        run: |
+          set -euo pipefail
+          version=$(node -p "require('./package.json').version")
+          bumped=false
+          for attempt in $(seq 1 20); do
+            if ! npm view "$PACKAGE_NAME@$version" version --registry=https://registry.npmjs.org >/dev/null 2>&1; then
+              break
+            fi
+            if [ "$attempt" -eq 20 ]; then
+              echo "::error::Could not find an available version after 20 patch increments."
+              exit 1
+            fi
+            npm version patch --no-git-tag-version --ignore-scripts >/dev/null
+            version=$(node -p "require('./package.json').version")
+            bumped=true
+          done
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "bumped=$bumped" >> "$GITHUB_OUTPUT"
+
+      - name: Publish public npm package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --registry=https://registry.npmjs.org
+
+      - name: Commit the released version for the next build
+        if: steps.release.outputs.bumped == 'true'
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add package.json package-lock.json
+          git commit -m "chore(release): sync npm version $VERSION [skip ci]"
+          for attempt in $(seq 1 5); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "Retrying release version push ($attempt/5)."
+            sleep 2
+          done
+          echo "::error::Could not push the release version update to main."
+          exit 1

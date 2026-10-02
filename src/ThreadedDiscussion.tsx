@@ -216,7 +216,7 @@ const Discussion = ({
   );
 };
 
-export interface ThreadedDiscussionProps extends ThreadCraftDiscussionProps {}
+export type ThreadedDiscussionProps = ThreadCraftDiscussionProps;
 
 export const ThreadedDiscussion = (props: ThreadedDiscussionProps): JSX.Element => (
   <Discussion {...props} />
