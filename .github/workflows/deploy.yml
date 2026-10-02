@@ -111,6 +111,11 @@ jobs:
           registry-url: https://registry.npmjs.org
           scope: '@threadcraft'
 
+      - name: Verify npm publishing identity
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm whoami --registry=https://registry.npmjs.org
+
       - name: Install dependencies
         run: npm ci
 
