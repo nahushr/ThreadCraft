@@ -8,6 +8,37 @@ import type { ThreadCraftComment, ThreadCraftData } from "./types";
 afterEach(cleanup);
 
 describe("ThreadedDiscussion examples", () => {
+  it("hides author role chips in AI chat while retaining author names", () => {
+    const data: ThreadCraftData = {
+      kind: "chat",
+      title: "AI assistant",
+      authorTypeStyles: {
+        user: { label: "You" },
+        assistant: { label: "AI" },
+      },
+      comments: [
+        { id: "user-message", author: "Alex Morgan", authorType: "user", text: "Can you summarize this?" },
+        { id: "assistant-message", author: "AI Assistant", authorType: "assistant", text: "Here is the summary." },
+      ],
+    };
+
+    render(
+      <ChatThread
+        data={data}
+        showHeader={false}
+        showStreamHeading={false}
+        allowNewComments={false}
+        allowReplies={false}
+        allowReactions={false}
+      />,
+    );
+
+    expect(screen.getByText("Alex Morgan")).toBeTruthy();
+    expect(screen.getByText("AI Assistant")).toBeTruthy();
+    expect(screen.queryByText("You")).toBeNull();
+    expect(screen.queryByText("AI", { exact: true })).toBeNull();
+  });
+
   it("loads older chat messages at the top", async () => {
     const data: ThreadCraftData = {
       kind: "chat",

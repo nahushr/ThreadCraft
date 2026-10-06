@@ -80,7 +80,7 @@ const CommentThread = ({
           <span className={avatarClassName} aria-hidden="true" style={avatarStyle}>{getInitials(comment.author)}</span>
         )}
         <strong className={styles.author}>{comment.author || "Anonymous"}</strong>
-        {comment.authorType && (
+        {variant !== "chat" && comment.authorType && (
           <span className={styles.authorBadge} style={badgeStyle}>
             {authorTypeStyle?.icon && <span aria-hidden="true" className={styles.authorBadgeIcon}>{authorTypeStyle.icon}</span>}
             {authorTypeStyle?.label ?? comment.authorType}
