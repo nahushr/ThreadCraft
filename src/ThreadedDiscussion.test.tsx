@@ -139,12 +139,14 @@ describe("ThreadedDiscussion examples", () => {
     };
 
     render(<ControlledChat />);
-    fireEvent.change(screen.getByLabelText("Send a message"), { target: { value: "Find recent reports" } });
-    fireEvent.submit(screen.getByLabelText("Send a message").closest("form")!);
+    const messageInput = screen.getByLabelText("Send a message");
+    fireEvent.change(messageInput, { target: { value: "Find recent reports" } });
+    fireEvent.keyDown(messageInput, { key: "Enter", code: "Enter" });
 
     expect(await screen.findByText("I found three matching reports.")).toBeTruthy();
     expect(screen.getAllByText("Find recent reports")).toHaveLength(1);
     expect(screen.queryByRole("status", { name: "AI assistant is thinking" })).toBeNull();
+    expect(document.activeElement).toBe(messageInput);
   });
 
   it("loads the next root page asynchronously and appends it", async () => {

@@ -260,6 +260,7 @@ const CommentComposer = ({
   const nameId = useId();
   const emailId = useId();
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const restoreChatInputFocus = useRef(false);
   const [draft, setDraft] = useState("");
   const [attachments, setAttachments] = useState<ThreadCraftAttachment[]>([]);
   const [rating, setRating] = useState(5);
@@ -275,6 +276,12 @@ const CommentComposer = ({
   useEffect(() => {
     if (replyingTo) inputRef.current?.focus();
   }, [replyingTo]);
+
+  useEffect(() => {
+    if (variant !== "chat" || sending || isSubmitting || !restoreChatInputFocus.current) return;
+    restoreChatInputFocus.current = false;
+    inputRef.current?.focus();
+  }, [isSubmitting, sending, variant]);
 
   useEffect(() => {
     const options = roleOptionsKey.split(",").filter(Boolean) as ThreadCraftReplyAuthorType[];
@@ -300,6 +307,7 @@ const CommentComposer = ({
       return;
     }
 
+    restoreChatInputFocus.current = variant === "chat";
     setSending(true);
     setError("");
     try {
