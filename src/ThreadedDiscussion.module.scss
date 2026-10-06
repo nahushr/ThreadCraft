@@ -180,22 +180,23 @@
   .chatSettingsPanel {
     position: absolute;
     z-index: 21;
-    top: 10px;
-    bottom: 10px;
-    left: 10px;
+    top: 50%;
+    bottom: auto;
+    left: 50%;
     width: min(340px, calc(100% - 20px));
+    max-height: calc(100% - 20px);
     padding: 18px 16px;
     border: 1px solid #e4e7ec;
     border-radius: 16px;
     box-shadow: 0 24px 64px rgb(16 24 40 / 24%);
     visibility: hidden;
-    transform: translateX(calc(-100% - 12px));
+    transform: translate(-150%, -50%);
     transition: transform .2s ease, visibility .2s ease;
   }
 
   .chatSettingsPanelOpen {
     visibility: visible;
-    transform: translateX(0);
+    transform: translate(-50%, -50%);
   }
 
   .chatSettingsHeading { align-items: center; }
