@@ -30,6 +30,109 @@
   background: var(--tc-chat-background, #f8fafc);
 }
 
+.chatWorkspace {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chatConversation {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chatSettingsPanel {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  padding: 20px 16px;
+  overflow-y: auto;
+  background: var(--tc-chat-settings-background, #fff);
+  scrollbar-width: thin;
+  scrollbar-color: #d0d5dd transparent;
+}
+
+.chatSettingsHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chatSettingsHeading h2 {
+  margin: 4px 0 3px;
+  color: var(--tc-text);
+  font-size: 16px;
+  font-weight: 750;
+  line-height: 1.3;
+}
+
+.chatSettingsHeading p {
+  margin: 0;
+  color: var(--tc-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.chatSettingsEyebrow {
+  color: var(--tc-accent);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .11em;
+}
+
+.chatSettingsClose,
+.chatSettingsTrigger,
+.chatSettingsScrim { display: none; }
+
+.chatSettingsTriggerCopy {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+  text-align: left;
+}
+
+.chatSettingsTriggerLabel {
+  color: #667085;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+
+.chatSettingsTriggerCopy strong {
+  overflow: hidden;
+  color: #1d2939;
+  font-size: 12px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chatSettingsTriggerModel {
+  overflow: hidden;
+  color: #667085;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chatSettingsTriggerAction {
+  flex: 0 0 auto;
+  color: var(--tc-accent);
+  font-size: 11px;
+  font-weight: 750;
+}
+
 .streamHeading {
   display: flex;
   align-items: center;
@@ -58,6 +161,97 @@
 .chatStream:focus-visible { outline: 2px solid #9aafff; outline-offset: -2px; }
 
 .chatMoreButtonStart { order: -1; }
+
+@container threadcraft-discussion (min-width: 820px) {
+  .chatWorkspaceWithSettings {
+    display: grid;
+    grid-template-columns: minmax(232px, 270px) minmax(0, 1fr);
+  }
+
+  .chatSettingsPanel {
+    width: auto;
+    border-right: 1px solid var(--tc-line);
+  }
+}
+
+@container threadcraft-discussion (max-width: 819px) {
+  .chatWorkspaceWithSettings { flex-direction: column; }
+
+  .chatSettingsPanel {
+    position: absolute;
+    z-index: 21;
+    top: 10px;
+    bottom: 10px;
+    left: 10px;
+    width: min(340px, calc(100% - 20px));
+    padding: 18px 16px;
+    border: 1px solid #e4e7ec;
+    border-radius: 16px;
+    box-shadow: 0 24px 64px rgb(16 24 40 / 24%);
+    visibility: hidden;
+    transform: translateX(calc(-100% - 12px));
+    transition: transform .2s ease, visibility .2s ease;
+  }
+
+  .chatSettingsPanelOpen {
+    visibility: visible;
+    transform: translateX(0);
+  }
+
+  .chatSettingsHeading { align-items: center; }
+
+  .chatSettingsClose {
+    display: inline-grid;
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    place-items: center;
+    border: 1px solid #e4e7ec;
+    border-radius: 9px;
+    color: #475467;
+    background: #fff;
+    font-size: 21px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .chatSettingsClose:hover { background: #f8fafc; }
+
+  .chatSettingsScrim {
+    position: absolute;
+    z-index: 20;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: rgb(16 24 40 / 38%);
+    cursor: pointer;
+  }
+
+  .chatSettingsTrigger {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 57px;
+    padding: 8px 14px;
+    border: 0;
+    border-bottom: 1px solid var(--tc-line);
+    color: inherit;
+    background: #fff;
+    font: inherit;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .chatSettingsTrigger:hover { background: #f9faff; }
+  .chatSettingsTrigger:focus-visible,
+  .chatSettingsClose:focus-visible { outline: 3px solid rgb(49 94 251 / 25%); outline-offset: 2px; }
+}
 
 .empty {
   margin: 0;
@@ -91,4 +285,8 @@
 @container threadcraft-discussion (max-width: 600px) {
   .streamHeading { margin-top: 18px; }
   .chatStream { padding: 14px 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chatSettingsPanel { transition: none; }
 }

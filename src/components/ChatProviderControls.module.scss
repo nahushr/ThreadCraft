@@ -1,28 +1,27 @@
 .controls {
   flex: 0 0 auto;
   display: grid;
-  gap: 9px;
-  padding: 12px 18px;
-  border-bottom: 1px solid var(--tc-line, #e4e7ec);
-  background: var(--tc-chat-settings-background, #fff);
+  gap: 14px;
+  padding: 0;
+  background: transparent;
 }
 
 .selectionRow,
 .keyRow {
   display: grid;
-  grid-template-columns: minmax(132px, 0.7fr) minmax(180px, 1.3fr);
-  align-items: end;
-  gap: 9px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
 }
 
-.keyRow { grid-template-columns: minmax(0, 1fr) auto; }
+.keyRow { gap: 8px; }
 
 .field {
   display: grid;
   min-width: 0;
-  gap: 4px;
+  gap: 6px;
   color: #667085;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: .02em;
 }
@@ -31,15 +30,15 @@
 .field input {
   width: 100%;
   min-width: 0;
-  height: 35px;
-  padding: 0 10px;
+  height: 39px;
+  padding: 0 11px;
   border: 1px solid #d0d5dd;
   border-radius: 8px;
   outline: 0;
   color: #344054;
   background: #fff;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   line-height: 1.4;
   letter-spacing: normal;
@@ -54,14 +53,15 @@
 .field select:disabled { color: #98a2b3; background: #f9fafb; }
 
 .loadButton {
-  min-height: 35px;
-  padding: 0 12px;
+  width: 100%;
+  min-height: 39px;
+  padding: 0 13px;
   border: 1px solid #d5ddff;
   border-radius: 8px;
   color: #315efb;
   background: #f5f7ff;
   font: inherit;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 750;
   white-space: nowrap;
   cursor: pointer;
@@ -69,22 +69,15 @@
 
 .loadButton:hover:not(:disabled) { border-color: #b9c6ff; background: #edf1ff; }
 .loadButton:disabled { color: #98a2b3; border-color: #eaecf0; background: #f9fafb; cursor: wait; }
-.hiddenKeyActions { display: flex; justify-content: flex-end; }
+.hiddenKeyActions { display: flex; }
 .status,
 .error { margin: -2px 0 0; font-size: 10px; }
 .status { color: #667085; }
 .error { color: #b42318; }
 
-@container threadcraft-discussion (max-width: 520px) {
-  .controls { padding: 10px 12px; }
-  .selectionRow { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 7px; }
-  .keyRow { grid-template-columns: minmax(0, 1fr); gap: 7px; }
-  .loadButton { justify-self: end; }
-}
-
 @media (max-width: 380px) {
   .field { font-size: 9px; }
   .field select,
-  .field input { height: 33px; padding: 0 8px; font-size: 11px; }
-  .loadButton { min-height: 33px; }
+  .field input { height: 36px; padding: 0 9px; font-size: 12px; }
+  .loadButton { min-height: 36px; }
 }

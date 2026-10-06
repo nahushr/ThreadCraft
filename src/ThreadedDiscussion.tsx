@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
 import type {
   ThreadCraftComment,
@@ -124,6 +124,10 @@ const Discussion = ({
   const [selectedReactions, setSelectedReactions] = useState<Record<string, string[]>>({});
   const [localChatProvider, setLocalChatProvider] = useState(selectedChatProvider ?? chatProviders[0]?.id ?? "");
   const [localChatModel, setLocalChatModel] = useState(selectedChatModel ?? "");
+  const [chatSettingsOpen, setChatSettingsOpen] = useState(false);
+  const chatSettingsId = useId();
+  const chatSettingsTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const chatSettingsPanelRef = useRef<HTMLElement | null>(null);
   const lastDataKey = useRef(dataKey);
   const lastSyncedData = useRef({ dataKey, comments: data.comments, hasMore: data.hasMore });
   const streamRef = useRef<HTMLDivElement | null>(null);
@@ -191,6 +195,47 @@ const Discussion = ({
     }
     scrollIntent.current = { kind: "bottom" };
   }, [comments, isChat, typingIndicator]);
+
+  useEffect(() => {
+    if (!hasChatProviderControls || !chatSettingsOpen) return;
+
+    const panel = chatSettingsPanelRef.current;
+    if (!panel) return;
+    const initialFocus = panel.querySelector<HTMLElement>("select, input, button");
+    initialFocus?.focus();
+
+    const handleDialogKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") {
+        setChatSettingsOpen(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const focusable = Array.from(panel.querySelectorAll<HTMLElement>(
+        'button:not(:disabled), input:not(:disabled), select:not(:disabled), [tabindex="0"]',
+      ));
+      if (focusable.length === 0) {
+        event.preventDefault();
+        panel.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleDialogKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleDialogKeyDown);
+      chatSettingsTriggerRef.current?.focus();
+    };
+  }, [chatSettingsOpen, hasChatProviderControls]);
 
   const visibleComments = comments.slice(0, visibleRootCount);
   const canLoadMore = comments.length > visibleRootCount || (hasMore && Boolean(onLoadMore));
@@ -306,32 +351,12 @@ const Discussion = ({
     </button>
   ) : null;
 
-  return (
-    <section
-      aria-label={variant === "review" ? "Product reviews" : isChat ? "Chat conversation" : "Issue discussion"}
-      className={`${styles.root} ${isChat ? styles.chatRoot : ""}`.trim()}
-    >
-      {showHeader && <DiscussionHeader data={data} variant={variant} />}
-
-      {hasChatProviderControls && (
-        <ChatProviderControls
-          providers={chatProviders}
-          showApiKeyInput={showChatApiKeyInput}
-          selectedProvider={resolvedChatProvider}
-          selectedModel={resolvedChatModel}
-          onProviderChange={(provider) => {
-            setLocalChatProvider(provider);
-            onChatProviderChange?.(provider);
-          }}
-          onModelChange={(model) => {
-            setLocalChatModel(model);
-            onChatModelChange?.(model);
-          }}
-          onApiKeyChange={onChatApiKeyChange}
-          onLoadModels={onLoadChatModels}
-        />
-      )}
-
+  const selectedProviderOption = chatProviders.find(({ id }) => id === resolvedChatProvider);
+  const selectedModelLabel = selectedProviderOption?.models?.find(
+    ({ id }) => id === resolvedChatModel,
+  )?.label ?? resolvedChatModel;
+  const conversationContent = (
+    <>
       {showStreamHeading && (
         <div className={styles.streamHeading}>
           <strong>{sectionTitle}</strong>
@@ -394,6 +419,95 @@ const Discussion = ({
           onSubmit={handleSubmit}
         />
       )}
+    </>
+  );
+
+  const chatProviderControls = hasChatProviderControls ? (
+    <ChatProviderControls
+      providers={chatProviders}
+      showApiKeyInput={showChatApiKeyInput}
+      selectedProvider={resolvedChatProvider}
+      selectedModel={resolvedChatModel}
+      onProviderChange={(provider) => {
+        setLocalChatProvider(provider);
+        onChatProviderChange?.(provider);
+      }}
+      onModelChange={(model) => {
+        setLocalChatModel(model);
+        onChatModelChange?.(model);
+      }}
+      onApiKeyChange={onChatApiKeyChange}
+      onLoadModels={onLoadChatModels}
+    />
+  ) : null;
+
+  return (
+    <section
+      aria-label={variant === "review" ? "Product reviews" : isChat ? "Chat conversation" : "Issue discussion"}
+      className={`${styles.root} ${isChat ? styles.chatRoot : ""}`.trim()}
+    >
+      {showHeader && <DiscussionHeader data={data} variant={variant} />}
+
+      {isChat ? (
+        <div className={`${styles.chatWorkspace} ${hasChatProviderControls ? styles.chatWorkspaceWithSettings : ""}`}>
+          {hasChatProviderControls && (
+            <>
+              {chatSettingsOpen && (
+                <button
+                  aria-label="Close AI model settings"
+                  className={styles.chatSettingsScrim}
+                  type="button"
+                  onClick={() => setChatSettingsOpen(false)}
+                />
+              )}
+              <aside
+                aria-labelledby={`${chatSettingsId}-title`}
+                aria-modal={chatSettingsOpen ? "true" : undefined}
+                className={`${styles.chatSettingsPanel} ${chatSettingsOpen ? styles.chatSettingsPanelOpen : ""}`.trim()}
+                id={`${chatSettingsId}-panel`}
+                ref={chatSettingsPanelRef}
+                role={chatSettingsOpen ? "dialog" : "complementary"}
+                tabIndex={-1}
+              >
+                <div className={styles.chatSettingsHeading}>
+                  <div>
+                    <span className={styles.chatSettingsEyebrow}>MODEL CONFIGURATION</span>
+                    <h2 id={`${chatSettingsId}-title`}>AI model</h2>
+                    <p>Choose the provider and model for this conversation.</p>
+                  </div>
+                  <button
+                    aria-label="Close AI model settings"
+                    className={styles.chatSettingsClose}
+                    type="button"
+                    onClick={() => setChatSettingsOpen(false)}
+                  >
+                    <span aria-hidden="true">×</span>
+                  </button>
+                </div>
+                {chatProviderControls}
+              </aside>
+              <button
+                aria-controls={`${chatSettingsId}-panel`}
+                aria-expanded={chatSettingsOpen}
+                aria-haspopup="dialog"
+                aria-label={`Change AI model. ${selectedProviderOption?.label ?? "Choose provider"}${selectedModelLabel ? `, ${selectedModelLabel}` : ""}`}
+                className={styles.chatSettingsTrigger}
+                ref={chatSettingsTriggerRef}
+                type="button"
+                onClick={() => setChatSettingsOpen(true)}
+              >
+                <span className={styles.chatSettingsTriggerCopy}>
+                  <span className={styles.chatSettingsTriggerLabel}>AI model</span>
+                  <strong>{selectedProviderOption?.label ?? "Choose provider"}</strong>
+                  {selectedModelLabel && <span className={styles.chatSettingsTriggerModel}>{selectedModelLabel}</span>}
+                </span>
+                <span className={styles.chatSettingsTriggerAction}>Change</span>
+              </button>
+            </>
+          )}
+          <div className={styles.chatConversation}>{conversationContent}</div>
+        </div>
+      ) : conversationContent}
     </section>
   );
 };

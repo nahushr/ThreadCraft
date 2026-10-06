@@ -75,7 +75,7 @@ export function DiscussionExample() {
 
 ### AI provider controls
 
-Provider and model selectors are opt-in for `ChatThread`. A host can preconfigure credentials and hide the key field while keeping both selectors visible:
+Provider and model selectors are opt-in for `ChatThread`. On wide layouts, the settings panel sits beside the conversation. On narrow layouts, a compact model summary opens the same controls in a dialog. A host can preconfigure credentials and hide the key field while keeping both selectors visible:
 
 ```tsx
 import type { ThreadCraftChatProviderOption } from "@simplishelf/threadcraft";
@@ -157,7 +157,7 @@ The native entry uses React Native components and does not require the CSS impor
 | `typingIndicatorLabel` | `string` | `"AI assistant is thinking"` | Accessible typing indicator label |
 | `isSubmitting` | `boolean` | `false` | Disable the composer while the host app processes a message |
 | `controlledComments` | `boolean` | `false` | Sync parent-owned `data.comments`; recommended for AI chat |
-| `showChatProviderControls` | `boolean` | `false` | Show provider and model controls in chat mode |
+| `showChatProviderControls` | `boolean` | `false` | Show provider/model settings beside wide chats and in a dialog on narrow chats |
 | `chatProviders` | `ThreadCraftChatProviderOption[]` | `[]` | Provider labels, optional API keys, and preloaded models |
 | `showChatApiKeyInput` | `boolean` | `true` | Show a password input while provider controls are enabled; set `false` when the host supplies credentials |
 | `selectedChatProvider` | `string` | First provider | Controlled provider selection |
