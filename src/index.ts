@@ -8,6 +8,8 @@ export type {
   ThreadCraftData,
   ThreadCraftDiscussionProps,
   ThreadCraftId,
+  ThreadCraftIdentityField,
+  ThreadCraftIdentityFields,
   ThreadCraftLoadMoreRequest,
   ThreadCraftLoadMoreResult,
   ThreadCraftReplyAuthorType,

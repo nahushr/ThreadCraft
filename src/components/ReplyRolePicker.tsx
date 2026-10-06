@@ -5,6 +5,7 @@ import styles from "./ReplyRolePicker.module.scss";
 interface ReplyRolePickerProps {
   variant: "issue" | "review";
   value: ThreadCraftReplyAuthorType;
+  options?: ThreadCraftReplyAuthorType[];
   disabled?: boolean;
   onChange: (role: ThreadCraftReplyAuthorType) => void;
 }
@@ -12,35 +13,42 @@ interface ReplyRolePickerProps {
 const ReplyRolePicker = ({
   variant,
   value,
+  options,
   disabled = false,
   onChange,
 }: ReplyRolePickerProps): JSX.Element => {
-  const options: Array<{ value: ThreadCraftReplyAuthorType; label: string }> = variant === "review"
+  const roleOptions: ThreadCraftReplyAuthorType[] = options?.length ? options : variant === "review"
     ? [
-      { value: "customer", label: "Customer" },
-      { value: "business", label: "Business" },
+      "customer",
+      "business",
     ]
     : [
-      { value: "support", label: "Support" },
-      { value: "customer", label: "Customer" },
+      "support",
+      "customer",
     ];
+  const label = (role: ThreadCraftReplyAuthorType): string =>
+    role.charAt(0).toUpperCase() + role.slice(1);
 
   return (
     <label className={styles.picker}>
       <span className={styles.label}>Replying as</span>
-      <span className={styles.selectWrap}>
-        <select
-          aria-label="Replying as"
-          className={styles.select}
-          disabled={disabled}
-          value={value}
-          onChange={(event) => onChange(event.target.value as ThreadCraftReplyAuthorType)}
-        >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>{option.label}</option>
-          ))}
-        </select>
-      </span>
+      {roleOptions.length > 1 ? (
+        <span className={styles.selectWrap}>
+          <select
+            aria-label="Replying as"
+            className={styles.select}
+            disabled={disabled}
+            value={value}
+            onChange={(event) => onChange(event.target.value as ThreadCraftReplyAuthorType)}
+          >
+            {roleOptions.map((role) => (
+              <option key={role} value={role}>{label(role)}</option>
+            ))}
+          </select>
+        </span>
+      ) : (
+        <span className={styles.fixedRole}>{label(roleOptions[0] ?? value)}</span>
+      )}
     </label>
   );
 };

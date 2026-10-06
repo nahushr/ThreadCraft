@@ -86,11 +86,26 @@ export interface ThreadCraftLoadMoreResult {
 
 export type ThreadCraftReplyAuthorType = "customer" | "business" | "support";
 
+export interface ThreadCraftIdentityField {
+  label: string;
+  placeholder?: string;
+  value?: string;
+  required?: boolean;
+  keyboardType?: "default" | "email-address";
+}
+
+export interface ThreadCraftIdentityFields {
+  authorName?: ThreadCraftIdentityField;
+  authorEmail?: ThreadCraftIdentityField;
+}
+
 export interface ThreadCraftSubmitPayload {
   text: string;
   parentId?: ThreadCraftId;
   attachments: ThreadCraftAttachment[];
   rating?: number;
+  authorName?: string;
+  authorEmail?: string;
   /** Selected reply identity; issue replies use support/customer, reviews use customer/business. */
   authorType?: ThreadCraftReplyAuthorType;
 }
@@ -106,8 +121,21 @@ export interface ThreadCraftDiscussionProps {
   /** Number of additional roots requested or revealed per click. Defaults to 50. */
   loadMoreCount?: number;
   allowReplies?: boolean;
+  /** Whether the root-level composer is available. Defaults to true. */
+  allowNewComments?: boolean;
   allowAttachments?: boolean;
   allowReactions?: boolean;
+  /** Show stars on review comments; independent of whether the composer collects a rating. */
+  showRating?: boolean;
+  allowRatingInput?: boolean;
+  /** Role options for replies. A single option is shown as a fixed identity. */
+  replyAuthorTypes?: ThreadCraftReplyAuthorType[];
+  newCommentAuthorType?: ThreadCraftReplyAuthorType;
+  /** Where newly submitted root comments appear. Defaults to the end. */
+  newCommentPosition?: "start" | "end";
+  identityFields?: ThreadCraftIdentityFields;
+  /** Native clients provide their platform file-picker through this callback. */
+  onPickAttachments?: () => Promise<ThreadCraftAttachment[]>;
   onLoadMore?: (
     request: ThreadCraftLoadMoreRequest,
   ) => Promise<ThreadCraftLoadMoreResult>;

@@ -1,44 +1,30 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
+import { Linking, Pressable, Text, View } from "react-native";
+import { appendReplyToTree, appendUniqueRootComments, buildCommentTree } from "../threadUtils";
 import type {
   ThreadCraftComment,
   ThreadCraftDiscussionProps,
-  ThreadCraftId,
+  ThreadCraftReplyAuthorType,
   ThreadCraftSubmitPayload,
-} from "./types";
-import {
-  appendReplyToTree,
-  appendUniqueRootComments,
-  buildCommentTree,
-} from "./threadUtils";
-import { normalizeReactions } from "./utils/reactions";
-import CommentComposer from "./components/CommentComposer";
-import CommentThread from "./components/CommentThread";
-import DiscussionHeader from "./components/DiscussionHeader";
-import styles from "./ThreadedDiscussion.module.scss";
+} from "../types";
+import { formatDate } from "../utils/formatDate";
+import { normalizeReactions } from "../utils/reactions";
+import NativeCommentCard from "./NativeCommentCard";
+import NativeComposer from "./NativeComposer";
+import { nativeStyles as styles } from "./styles";
 
-let fallbackCommentIdSequence = 0;
+let fallbackIdSequence = 0;
 
 const createCommentId = (): string => {
-  if (typeof crypto !== "undefined") {
-    if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
-    if (typeof crypto.getRandomValues === "function") {
-      const bytes = crypto.getRandomValues(new Uint8Array(16));
-      const suffix = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
-      return `comment-${suffix}`;
-    }
-  }
-  fallbackCommentIdSequence += 1;
-  return `comment-${Date.now()}-${fallbackCommentIdSequence}`;
+  fallbackIdSequence += 1;
+  return `threadcraft-${Date.now()}-${fallbackIdSequence}`;
 };
 
 const countComments = (comments: ThreadCraftComment[]): number =>
   comments.reduce((total, comment) => total + 1 + countComments(comment.replies || []), 0);
 
-const getParentId = (comment: ThreadCraftComment | null): ThreadCraftId | undefined =>
-  comment?.id;
-
-const Discussion = ({
+const NativeDiscussion = ({
   data,
   variant: requestedVariant,
   currentUser = "You",
@@ -55,23 +41,19 @@ const Discussion = ({
   newCommentAuthorType,
   newCommentPosition = "end",
   identityFields,
+  onPickAttachments,
   onLoadMore,
   onSubmitComment,
   onReact,
 }: ThreadCraftDiscussionProps): JSX.Element => {
   const variant = requestedVariant || data.kind || "issue";
-  const pageSize = Math.max(1, loadMoreCount || initialRootLimit || 50);
   const initialLimit = Math.max(1, initialRootLimit || 50);
-  const normalizedComments = useMemo(
-    () => buildCommentTree(data.comments || []),
-    [data.comments],
-  );
+  const pageSize = Math.max(1, loadMoreCount || initialLimit);
+  const normalizedComments = useMemo(() => buildCommentTree(data.comments || []), [data.comments]);
   const dataKey = `${variant}:${String(data.id ?? data.title)}`;
   const [comments, setComments] = useState(normalizedComments);
   const [visibleRootCount, setVisibleRootCount] = useState(initialLimit);
-  const [hasMore, setHasMore] = useState(
-    data.hasMore ?? normalizedComments.length > initialLimit,
-  );
+  const [hasMore, setHasMore] = useState(data.hasMore ?? normalizedComments.length > initialLimit);
   const [loadingMore, setLoadingMore] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ThreadCraftComment | null>(null);
   const [loadError, setLoadError] = useState("");
@@ -80,12 +62,12 @@ const Discussion = ({
   const lastDataKey = useRef(dataKey);
   const showRating = showRatingProp ?? (variant === "review" && data.showRating === true);
   const allowRatingInput = allowRatingInputProp ?? showRating;
-  const resolvedNewCommentAuthorType = newCommentAuthorType ?? (variant === "review" ? "customer" : "support");
+  const resolvedNewCommentAuthorType = newCommentAuthorType || (variant === "review" ? "customer" : "support");
   const resolvedReplyAuthorTypes = replyAuthorTypes?.length
     ? replyAuthorTypes
     : variant === "review"
-      ? ["customer", "business"] as const
-      : ["support", "customer"] as const;
+      ? ["customer", "business"] as ThreadCraftReplyAuthorType[]
+      : ["support", "customer"] as ThreadCraftReplyAuthorType[];
 
   useEffect(() => {
     if (lastDataKey.current === dataKey) return;
@@ -101,34 +83,25 @@ const Discussion = ({
 
   const visibleComments = comments.slice(0, visibleRootCount);
   const canLoadMore = comments.length > visibleRootCount || (hasMore && Boolean(onLoadMore));
-  const commentCount = countComments(comments);
-  const sectionTitle = variant === "review" ? "Customer reviews" : "Discussion";
-
-  const handleReply = (comment: ThreadCraftComment): void => {
-    setReplyingTo(comment);
-  };
+  const totalCommentCount = data.totalRootComments ?? countComments(comments);
 
   const handleReact = (comment: ThreadCraftComment, emoji: string): void => {
-    const commentKey = String(comment.id);
-    const wasSelected = selectedReactions[commentKey]?.includes(emoji) || false;
+    const key = String(comment.id);
+    const wasSelected = selectedReactions[key]?.includes(emoji) || false;
     const initialCount = normalizeReactions(comment.reactions)[emoji] || 0;
-
     setSelectedReactions((current) => {
-      const selected = new Set(current[commentKey] || []);
+      const selected = new Set(current[key] || []);
       if (selected.has(emoji)) selected.delete(emoji);
       else selected.add(emoji);
-      return { ...current, [commentKey]: [...selected] };
+      return { ...current, [key]: [...selected] };
     });
-    setReactionCounts((current) => {
-      const currentCount = current[commentKey]?.[emoji] ?? initialCount;
-      return {
-        ...current,
-        [commentKey]: {
-          ...(current[commentKey] || {}),
-          [emoji]: Math.max(0, currentCount + (wasSelected ? -1 : 1)),
-        },
-      };
-    });
+    setReactionCounts((current) => ({
+      ...current,
+      [key]: {
+        ...(current[key] || {}),
+        [emoji]: Math.max(0, (current[key]?.[emoji] ?? initialCount) + (wasSelected ? -1 : 1)),
+      },
+    }));
     onReact?.(comment, emoji);
   };
 
@@ -143,7 +116,6 @@ const Discussion = ({
         if (nextVisibleCount >= comments.length && !onLoadMore) setHasMore(false);
         return;
       }
-
       if (!onLoadMore) return;
       const result = await onLoadMore({ offset: comments.length, limit: pageSize });
       const nextComments = result.comments || [];
@@ -171,94 +143,90 @@ const Discussion = ({
         reactions: {},
         rating: payload.rating,
       };
-    const parentId = getParentId(replyingTo);
-
-    if (parentId != null) {
-      setComments((current) => appendReplyToTree(current, parentId, comment));
+    if (replyingTo) {
+      setComments((current) => appendReplyToTree(current, replyingTo.id, comment));
     } else {
-      setComments((current) => newCommentPosition === "start"
-        ? [comment, ...current]
-        : [...current, comment]);
+      setComments((current) => newCommentPosition === "start" ? [comment, ...current] : [...current, comment]);
       setVisibleRootCount((current) => Math.max(current, comments.length + 1));
     }
     setReplyingTo(null);
   };
 
+  const headerTitle = variant === "review" ? "Customer reviews" : "Discussion";
+  const headerAuthorLabel = variant === "review" ? "Store" : "Opened by";
+
   return (
-    <section
-      aria-label={variant === "review" ? "Product reviews" : "Issue discussion"}
-      className={styles.root}
-    >
-      {showHeader && <DiscussionHeader data={data} variant={variant} />}
+    <View accessibilityLabel={variant === "review" ? "Product reviews" : "Issue discussion"} style={styles.root}>
+      {showHeader && (
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Text style={styles.eyebrow}>
+              {variant === "review" ? "CUSTOMER REVIEWS" : `GITHUB ISSUE${data.id != null ? ` #${data.id}` : ""}`}
+            </Text>
+            <Text style={styles.title}>{data.title || headerTitle}</Text>
+            {data.body ? <Text style={styles.headerBody}>{data.body}</Text> : null}
+            <View style={styles.detailRow}>
+              {data.author ? <Text style={styles.detail}>{headerAuthorLabel} {data.author}</Text> : null}
+              {data.createdAt ? <Text style={styles.detail}>{formatDate(data.createdAt)}</Text> : null}
+              {data.status ? <Text style={styles.status}>{data.status}</Text> : null}
+            </View>
+          </View>
+          {data.url ? (
+            <Pressable onPress={() => void Linking.openURL(data.url!)}>
+              <Text style={styles.externalLink}>View on GitHub ↗</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      )}
 
-      <div className={styles.streamHeading}>
-        <strong>{sectionTitle}</strong>
-        <span>
-          {data.totalRootComments ?? commentCount} {variant === "review" ? "reviews" : "comments"}
-        </span>
-      </div>
+      <View style={styles.streamHeading}>
+        <Text style={styles.streamTitle}>{variant === "review" ? "Reviews" : "Discussion"}</Text>
+        <Text style={styles.streamCount}>{totalCommentCount} {variant === "review" ? "reviews" : "comments"}</Text>
+      </View>
 
-      <div className={styles.stream}>
+      <View style={styles.stream}>
         {visibleComments.length === 0 ? (
-          <p className={styles.empty}>No replies yet. Start the conversation.</p>
-        ) : (
-          visibleComments.map((comment) => (
-            <CommentThread
-              key={comment.id}
-              comment={comment}
-              authorTypeStyles={data.authorTypeStyles}
-              depth={0}
-              showRating={showRating}
-              allowReplies={allowReplies}
-              allowReactions={allowReactions}
-              onReply={handleReply}
-              reactionCounts={reactionCounts}
-              selectedReactions={selectedReactions}
-              onReact={handleReact}
-            />
-          ))
-        )}
+          <Text style={styles.empty}>No replies yet. Start the conversation.</Text>
+        ) : visibleComments.map((comment) => (
+          <NativeCommentCard
+            key={comment.id}
+            comment={comment}
+            authorTypeStyles={data.authorTypeStyles}
+            depth={0}
+            showRating={showRating}
+            allowReplies={allowReplies}
+            allowReactions={allowReactions}
+            reactionCounts={reactionCounts}
+            selectedReactions={selectedReactions}
+            onReply={setReplyingTo}
+            onReact={handleReact}
+          />
+        ))}
         {canLoadMore && (
-          <button
-            className={styles.moreButton}
-            disabled={loadingMore}
-            type="button"
-            onClick={() => void handleShowMore()}
-          >
-            {loadingMore ? "Loading comments…" : "See more comments"}
-          </button>
+          <Pressable accessibilityRole="button" disabled={loadingMore} style={styles.moreButton} onPress={() => void handleShowMore()}>
+            <Text style={styles.moreButtonText}>{loadingMore ? "Loading comments…" : "See more comments"}</Text>
+          </Pressable>
         )}
-        {loadError && <p className={styles.error} role="alert">{loadError}</p>}
-      </div>
+        {loadError ? <Text accessibilityRole="alert" style={styles.error}>{loadError}</Text> : null}
+      </View>
 
       {(allowNewComments || (allowReplies && replyingTo != null)) && (
-        <CommentComposer
+        <NativeComposer
           variant={variant}
+          replyingTo={replyingTo}
           showRating={showRating}
           allowRatingInput={allowRatingInput}
           allowAttachments={allowAttachments}
-          replyAuthorTypes={[...resolvedReplyAuthorTypes]}
+          replyAuthorTypes={resolvedReplyAuthorTypes}
           newCommentAuthorType={resolvedNewCommentAuthorType}
           identityFields={identityFields}
-          replyingTo={replyingTo}
+          onPickAttachments={onPickAttachments}
           onCancelReply={() => setReplyingTo(null)}
           onSubmit={handleSubmit}
         />
       )}
-    </section>
+    </View>
   );
 };
 
-export type ThreadedDiscussionProps = ThreadCraftDiscussionProps;
-
-export const ThreadedDiscussion = (props: ThreadedDiscussionProps): JSX.Element => (
-  <Discussion {...props} />
-);
-
-export const GitHubIssueThread = (props: ThreadCraftDiscussionProps): JSX.Element => (
-  <Discussion {...props} variant="issue" />
-);
-
-export const ReviewThread = (props: ThreadCraftDiscussionProps): JSX.Element => (
-  <Discussion {...props} variant="review" />
-);
+export default NativeDiscussion;

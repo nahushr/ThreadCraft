@@ -32,6 +32,10 @@
 .input:disabled { background: #f9fafb; cursor: wait; }
 .actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 11px; padding-top: 10px; border-top: 1px solid #f2f4f7; }
 .tools { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.identityField { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; color: #475467; font-size: 12px; font-weight: 650; }
+.identityField input { width: 100%; min-height: 38px; padding: 8px 10px; border: 1px solid #d0d5dd; border-radius: 8px; outline: 0; color: var(--tc-text); background: #fff; font: inherit; font-weight: 400; }
+.identityField input:focus { border-color: #9cadff; box-shadow: 0 0 0 3px rgb(49 94 251 / 12%); }
+.identityField input:disabled { background: #f9fafb; }
 
 .sendButton {
   flex: 0 0 auto;

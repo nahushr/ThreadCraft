@@ -1,0 +1,34 @@
+import type { JSX } from "react";
+import NativeDiscussion from "./NativeDiscussion";
+import type { ThreadCraftDiscussionProps } from "../types";
+
+export type ThreadedDiscussionProps = ThreadCraftDiscussionProps;
+
+export const ThreadedDiscussion = (props: ThreadedDiscussionProps): JSX.Element => (
+  <NativeDiscussion {...props} />
+);
+
+export const GitHubIssueThread = (props: ThreadedDiscussionProps): JSX.Element => (
+  <NativeDiscussion {...props} variant="issue" />
+);
+
+export const ReviewThread = (props: ThreadedDiscussionProps): JSX.Element => (
+  <NativeDiscussion {...props} variant="review" />
+);
+
+export { appendReplyToTree, appendUniqueRootComments, buildCommentTree, countRootComments } from "../threadUtils";
+export type {
+  ThreadCraftAuthorTypeStyle,
+  ThreadCraftAttachment,
+  ThreadCraftAttachmentInput,
+  ThreadCraftComment,
+  ThreadCraftData,
+  ThreadCraftDiscussionProps,
+  ThreadCraftId,
+  ThreadCraftIdentityField,
+  ThreadCraftIdentityFields,
+  ThreadCraftLoadMoreRequest,
+  ThreadCraftLoadMoreResult,
+  ThreadCraftReplyAuthorType,
+  ThreadCraftSubmitPayload,
+} from "../types";

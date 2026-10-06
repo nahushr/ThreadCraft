@@ -63,12 +63,30 @@ export function DiscussionExample() {
 }
 ```
 
+### React Native / Expo
+
+```tsx
+import { ReviewThread } from "@simplishelf/threadcraft/native";
+import type { ThreadCraftData } from "@simplishelf/threadcraft/native";
+
+const reviewData: ThreadCraftData = {
+  kind: "review",
+  title: "Product reviews",
+  showRating: true,
+  comments: [],
+};
+
+<ReviewThread data={reviewData} showHeader={false} />
+```
+
+The native entry uses React Native components and does not require the CSS import. When attachments are enabled, pass `onPickAttachments` and connect it to the app's native file picker.
+
 ## Integrations
 
 | Use case | Component | Data |
 |---|---|---|
 | GitHub issue | `GitHubIssueThread` | `kind: "issue"`; optional issue status, URL, author, and body |
-| Product review | `ReviewThread` | `kind: "review"`; set `showRating: true` to enable review stars and rating input |
+| Product review | `ReviewThread` | `kind: "review"`; set `showRating: true` to display review stars; use `allowRatingInput` to control rating entry |
 | Dynamic variant | `ThreadedDiscussion` | Optional `variant`; defaults to `data.kind`, then `"issue"` |
 
 ## Component options
@@ -82,8 +100,16 @@ export function DiscussionExample() {
 | `initialRootLimit` | `number` | `50` | Root comments shown first; their nested replies remain visible |
 | `loadMoreCount` | `number` | `initialRootLimit` or `50` | Root comments revealed or requested per “See more” |
 | `allowReplies` | `boolean` | `true` | Show reply actions |
-| `allowAttachments` | `boolean` | `true` | Show the image attachment picker |
+| `allowNewComments` | `boolean` | `true` | Show the root-level composer |
+| `allowAttachments` | `boolean` | `true` | Show attachments; native apps provide `onPickAttachments` |
 | `allowReactions` | `boolean` | `true` | Show reaction actions |
+| `showRating` | `boolean` | `data.showRating` | Display comment ratings in review threads |
+| `allowRatingInput` | `boolean` | `showRating` | Show the root composer rating control |
+| `replyAuthorTypes` | `ThreadCraftReplyAuthorType[]` | Issue/review defaults | Allowed reply identities; a one-item list fixes the identity |
+| `newCommentAuthorType` | `ThreadCraftReplyAuthorType` | `customer` for reviews, `support` for issues | Identity on root submissions |
+| `newCommentPosition` | `"start" \| "end"` | `"end"` | Place successful root submissions at the beginning or end |
+| `identityFields` | `ThreadCraftIdentityFields` | — | Configure author name/email fields in the composer |
+| `onPickAttachments` | `() => Promise<ThreadCraftAttachment[]>` | — | Native attachment picker adapter |
 | `onLoadMore` | `(request: ThreadCraftLoadMoreRequest) => Promise<ThreadCraftLoadMoreResult>` | — | Fetch another root-comment page |
 | `onSubmitComment` | `(payload: ThreadCraftSubmitPayload) => Promise<ThreadCraftComment \| void>` | Local update | Persist a comment; return the saved comment or `void` |
 | `onReact` | `(comment: ThreadCraftComment, emoji: string) => void` | — | Observe a locally applied reaction toggle |
@@ -105,7 +131,7 @@ export function DiscussionExample() {
 | `url` | `string` | | Link to the source issue or product |
 | `comments` | `ThreadCraftComment[]` | ✓ | Initial comment page; nested or flat |
 | `authorTypeStyles` | `Record<string, ThreadCraftAuthorTypeStyle>` | | Custom chip, card, and avatar colors by `authorType` |
-| `showRating` | `boolean` | | Set `true` for review stars and root review rating input |
+| `showRating` | `boolean` | | Display rating stars on review comments |
 | `hasMore` | `boolean` | | Whether more root comments are available |
 | `totalRootComments` | `number` | | Total root count shown in the discussion heading |
 
@@ -137,6 +163,13 @@ export function DiscussionExample() {
 | `isCustomer` | `boolean` | Legacy customer-author flag |
 | `isMine` | `boolean` | Legacy flag treated as customer-authored |
 | `authorType` | `string` | `customer`, `business`, `support`, `bot`, or custom role |
+
+### Composer identity: `ThreadCraftIdentityFields`
+
+| Field | Shape | Meaning |
+|---|---|---|
+| `authorName` | `{ label, placeholder?, value?, required? }` | Name input configuration and initial value |
+| `authorEmail` | `{ label, placeholder?, value?, required?, keyboardType? }` | Email input configuration and initial value; `keyboardType` is `"default"` or `"email-address"` |
 
 ### Author type style: `ThreadCraftAuthorTypeStyle`
 
@@ -378,7 +411,7 @@ Color values accept CSS color formats such as hex, `rgb()`, `hsl()`, and named c
 |---|---|---|
 | `onLoadMore` request | `{ offset: number, limit: number }` | Root-comment offset and page size |
 | `onLoadMore` result | `{ comments: ThreadCraftComment[], hasMore?: boolean }` | Appends unique roots; short page implies no more when `hasMore` is omitted |
-| `onSubmitComment` payload | `{ text, parentId?, attachments, rating?, authorType? }` | `parentId` is omitted for a root; rating is sent for a rated root review |
+| `onSubmitComment` payload | `{ text, parentId?, attachments, rating?, authorType?, authorName?, authorEmail? }` | `parentId` is omitted for a root; configured identity values are included |
 | Reply roles | `customer \| business \| support` | Issue: Support/Customer; review: Customer/Business |
 | `onReact` | `(comment, emoji) => void` | Runs after the component toggles the reaction locally |
 
@@ -387,22 +420,26 @@ Color values accept CSS color formats such as hex, `rgb()`, `hsl()`, and named c
 | `text` | `string` | Every submission |
 | `parentId` | `string \| number` | Reply |
 | `attachments` | `ThreadCraftAttachment[]` | Every submission; empty when none selected |
-| `rating` | `number` | Root review with `showRating: true` |
-| `authorType` | `"customer" \| "business" \| "support"` | Reply |
+| `rating` | `number` | Root review when rating input is enabled |
+| `authorType` | `"customer" \| "business" \| "support"` | Reply or configured root identity |
+| `authorName` | `string` | When the composer includes a name field |
+| `authorEmail` | `string` | When the composer includes an email field |
 
 | Built-in image picker | Limit |
 |---|---:|
 | Files per comment | 10 |
 | File size | 5 MB each |
 | Accepted files | Images |
-| Picker output | `dataUrl`, `mimeType`, `size`, `name` |
+| Web picker output | `dataUrl`, `mimeType`, `size`, `name` |
+| Native picker | `onPickAttachments` returns `ThreadCraftAttachment[]` |
 
 ## Exports
 
 | Export | Kind |
 |---|---|
 | `GitHubIssueThread`, `ReviewThread`, `ThreadedDiscussion` | Components |
-| `ThreadCraftId`, `ThreadCraftAttachment`, `ThreadCraftAttachmentInput`, `ThreadCraftAuthorTypeStyle`, `ThreadCraftComment`, `ThreadCraftData`, `ThreadCraftDiscussionProps`, `ThreadCraftLoadMoreRequest`, `ThreadCraftLoadMoreResult`, `ThreadCraftReplyAuthorType`, `ThreadCraftSubmitPayload` | Types |
+| `GitHubIssueThread`, `ReviewThread`, `ThreadedDiscussion` from `@simplishelf/threadcraft/native` | React Native components |
+| `ThreadCraftId`, `ThreadCraftAttachment`, `ThreadCraftAttachmentInput`, `ThreadCraftAuthorTypeStyle`, `ThreadCraftComment`, `ThreadCraftData`, `ThreadCraftDiscussionProps`, `ThreadCraftIdentityField`, `ThreadCraftIdentityFields`, `ThreadCraftLoadMoreRequest`, `ThreadCraftLoadMoreResult`, `ThreadCraftReplyAuthorType`, `ThreadCraftSubmitPayload` | Types |
 | `buildCommentTree`, `appendReplyToTree`, `appendUniqueRootComments`, `countRootComments` | Helpers |
 
 ## Development
