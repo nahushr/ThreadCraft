@@ -49,14 +49,21 @@
 }
 
 .chatSettingsPanel {
+  position: static;
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
   gap: 20px;
   width: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
   padding: 20px 16px;
+  border: 0;
   overflow-y: auto;
+  color: inherit;
   background: var(--tc-chat-settings-background, #fff);
+  font: inherit;
   scrollbar-width: thin;
   scrollbar-color: #d0d5dd transparent;
 }

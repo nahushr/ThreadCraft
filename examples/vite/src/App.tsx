@@ -101,28 +101,31 @@ export default function App() {
     return page;
   };
 
-  const discussion = mode === "issue" ? (
-    <GitHubIssueThread
-      data={issueData}
-      currentUser="Alex Morgan"
-      showHeader={false}
-      initialRootLimit={50}
-      loadMoreCount={50}
-      onLoadMore={fetchMoreIssueComments}
-      onSubmitComment={onSubmit}
-    />
-  ) : mode === "review" ? (
-    <ReviewThread
-      data={reviewData}
-      currentUser="Alex Morgan"
-      showHeader={false}
-      initialRootLimit={50}
-      loadMoreCount={50}
-      onLoadMore={fetchMoreReviews}
-      onSubmitComment={onSubmit}
-    />
-  ) : (
-    <ChatThread
+  const discussions = {
+    issue: (
+      <GitHubIssueThread
+        data={issueData}
+        currentUser="Alex Morgan"
+        showHeader={false}
+        initialRootLimit={50}
+        loadMoreCount={50}
+        onLoadMore={fetchMoreIssueComments}
+        onSubmitComment={onSubmit}
+      />
+    ),
+    review: (
+      <ReviewThread
+        data={reviewData}
+        currentUser="Alex Morgan"
+        showHeader={false}
+        initialRootLimit={50}
+        loadMoreCount={50}
+        onLoadMore={fetchMoreReviews}
+        onSubmitComment={onSubmit}
+      />
+    ),
+    chat: (
+      <ChatThread
       data={chatData}
       currentUser="Alex Morgan"
       showHeader={false}
@@ -151,8 +154,10 @@ export default function App() {
       typingIndicator={chatSubmitting}
       onLoadMore={onLoadOlderChatMessages}
       onSubmitComment={onSubmitChat}
-    />
-  );
+      />
+    ),
+  };
+  const discussion = discussions[mode];
 
   return (
     <main className="demo-shell">
@@ -182,14 +187,15 @@ export default function App() {
           <strong>Live component preview</strong>
           <span>{previewMode === "phone" ? "Phone-sized responsive view" : "Full-width desktop view"}</span>
         </div>
-        <div className="demo-preview-toggle" aria-label="Preview size" role="group">
+        <fieldset className="demo-preview-toggle">
+          <legend className="screen-reader-only">Preview size</legend>
           <button
             aria-pressed={previewMode === "desktop"}
             className={previewMode === "desktop" ? "selected" : ""}
             type="button"
             onClick={() => setPreviewMode("desktop")}
           >
-            <span aria-hidden="true" className="demo-device-icon demo-device-icon--desktop" />
+            <span aria-hidden="true" className="demo-device-icon demo-device-icon--desktop" />{" "}
             Desktop
           </button>
           <button
@@ -198,10 +204,10 @@ export default function App() {
             type="button"
             onClick={() => setPreviewMode("phone")}
           >
-            <span aria-hidden="true" className="demo-device-icon demo-device-icon--phone" />
+            <span aria-hidden="true" className="demo-device-icon demo-device-icon--phone" />{" "}
             Phone
           </button>
-        </div>
+        </fieldset>
       </div>
 
       <div className={`demo-preview ${previewMode === "phone" ? "demo-preview--phone" : ""}`}>

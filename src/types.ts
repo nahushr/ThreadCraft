@@ -53,7 +53,7 @@ export interface ThreadCraftComment {
   ratings?: number;
   isCustomer?: boolean;
   isMine?: boolean;
-  authorType?: "customer" | "business" | "support" | "bot" | string;
+  authorType?: string;
 }
 
 /** One JSON object describes the issue or product and the first page of comments. */

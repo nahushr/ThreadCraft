@@ -30,7 +30,8 @@ button { font: inherit; }
 .demo-preview-toolbar__copy { display: flex; flex-direction: column; gap: 2px; }
 .demo-preview-toolbar__copy strong { color: #344054; font-size: 12px; font-weight: 750; }
 .demo-preview-toolbar__copy span { color: #667085; font-size: 11px; }
-.demo-preview-toggle { display: flex; gap: 3px; padding: 4px; border: 1px solid #e4e7ec; border-radius: 11px; background: #fff; box-shadow: 0 1px 2px rgb(16 24 40 / 4%); }
+.demo-preview-toggle { display: flex; min-width: 0; gap: 3px; margin: 0; padding: 4px; border: 1px solid #e4e7ec; border-radius: 11px; background: #fff; box-shadow: 0 1px 2px rgb(16 24 40 / 4%); }
+.demo-preview-toggle legend { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .demo-preview-toggle button { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 0 11px; border: 0; border-radius: 7px; color: #667085; background: transparent; font-size: 11px; font-weight: 700; cursor: pointer; transition: color .14s ease, background .14s ease, box-shadow .14s ease; }
 .demo-preview-toggle button:hover:not(.selected) { color: #344054; background: #f8fafc; }
 .demo-preview-toggle button.selected { color: #315efb; background: #eef2ff; box-shadow: inset 0 0 0 1px #dce4ff; }

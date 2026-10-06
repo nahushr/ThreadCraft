@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import type { JSX, KeyboardEvent as ReactKeyboardEvent } from "react";
+import type { JSX } from "react";
 import styles from "./EmojiPicker.module.scss";
 
 interface EmojiEntry {
@@ -104,6 +104,17 @@ const EmojiPicker = ({ onSelect, disabled = false }: EmojiPickerProps): JSX.Elem
 
   useEffect(() => {
     if (!open) return undefined;
+    const closeOnEscape = (event: KeyboardEvent): void => {
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      triggerRef.current?.focus();
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return undefined;
     const closeOnOutsideClick = (event: MouseEvent): void => {
       if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
     };
@@ -122,14 +133,11 @@ const EmojiPicker = ({ onSelect, disabled = false }: EmojiPickerProps): JSX.Elem
     triggerRef.current?.focus();
   };
 
-  const handleKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>): void => {
-    if (event.key === "Escape") {
-      setOpen(false);
-      triggerRef.current?.focus();
-    }
-  };
-
   const sectionTitle = query.trim() ? "Search results" : activeCategory;
+  const showLoadError = catalogStatus === "error";
+  const showLoading = !showLoadError && !catalog;
+  const showResults = Boolean(catalog && results.length > 0);
+  const showEmptyResults = Boolean(catalog && results.length === 0);
 
   return (
     <div className={styles.picker} ref={rootRef}>
@@ -149,12 +157,11 @@ const EmojiPicker = ({ onSelect, disabled = false }: EmojiPickerProps): JSX.Elem
       </button>
 
       {open && (
-        <div
+        <dialog
           aria-label="Emoji picker"
           className={styles.menu}
           id={menuId}
-          role="dialog"
-          onKeyDown={handleKeyDown}
+          open
         >
           <div className={styles.menuHeading}>
             <span className={styles.menuTitle}>Choose an emoji</span>
@@ -214,7 +221,7 @@ const EmojiPicker = ({ onSelect, disabled = false }: EmojiPickerProps): JSX.Elem
             <span>{results.length.toLocaleString()}</span>
           </div>
 
-          {catalogStatus === "error" ? (
+          {showLoadError && (
             <div className={styles.loadError}>
               <p>Emoji couldn’t load.</p>
               <button
@@ -227,9 +234,9 @@ const EmojiPicker = ({ onSelect, disabled = false }: EmojiPickerProps): JSX.Elem
                 Try again
               </button>
             </div>
-          ) : !catalog ? (
-            <p aria-live="polite" className={styles.emptyState}>Loading emojis…</p>
-          ) : results.length ? (
+          )}
+          {showLoading && <p aria-live="polite" className={styles.emptyState}>Loading emojis…</p>}
+          {showResults && (
             <div aria-label={sectionTitle} className={styles.emojiGrid}>
               {results.map((item) => (
                 <button
@@ -244,11 +251,10 @@ const EmojiPicker = ({ onSelect, disabled = false }: EmojiPickerProps): JSX.Elem
                 </button>
               ))}
             </div>
-          ) : (
-            <p className={styles.emptyState}>No emoji found. Try another search.</p>
           )}
+          {showEmptyResults && <p className={styles.emptyState}>No emoji found. Try another search.</p>}
 
-        </div>
+        </dialog>
       )}
     </div>
   );

@@ -4,8 +4,6 @@ import type {
   ThreadCraftId,
 } from "./types";
 
-const idKey = (id: ThreadCraftId): string => String(id);
-
 const uniqueAttachments = (
   attachments: ThreadCraftAttachmentInput[],
 ): ThreadCraftAttachmentInput[] => {
@@ -62,7 +60,7 @@ const parseCommentBody = (
     .replace(/###?\s*(?:📎\s*)?\*\*Attachments\*\*[\s\S]*$/gi, "")
     .replace(/###?\s*(?:📎\s*)?Attachments[\s\S]*$/gi, "")
     .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
-    .replace(/<img\b[^>]*\/?\s*>/gi, "")
+    .replace(/<img\b[^>]*>/gi, "")
     .trim();
   const quotedText = comment.quotedText || quoteLines.join(" ").trim() || undefined;
 
@@ -117,22 +115,22 @@ export const buildCommentTree = (
     }
   });
 
-  const nodeById = new Map(flattened.map((comment) => [idKey(comment.id), comment]));
+  const nodeById = new Map(flattened.map((comment) => [String(comment.id), comment]));
   const roots: ThreadCraftComment[] = [];
   const childrenByParent = new Map<string, ThreadCraftComment[]>();
   for (const comment of flattened) {
-    if (comment.parentId == null || !nodeById.has(idKey(comment.parentId)) || idKey(comment.parentId) === idKey(comment.id)) {
+    if (comment.parentId == null || !nodeById.has(String(comment.parentId)) || String(comment.parentId) === String(comment.id)) {
       roots.push(comment);
       continue;
     }
-    const key = idKey(comment.parentId);
+    const key = String(comment.parentId);
     const children = childrenByParent.get(key) || [];
     children.push(comment);
     childrenByParent.set(key, children);
   }
 
   const attach = (parent: ThreadCraftComment, seen = new Set<string>()): ThreadCraftComment => {
-    const key = idKey(parent.id);
+    const key = String(parent.id);
     if (seen.has(key)) return parent;
     const nextSeen = new Set(seen).add(key);
     return {
@@ -151,7 +149,7 @@ export const appendReplyToTree = (
 ): ThreadCraftComment[] => {
   let added = false;
   const visit = (items: ThreadCraftComment[]): ThreadCraftComment[] => items.map((item) => {
-    if (idKey(item.id) === idKey(parentId)) {
+    if (String(item.id) === String(parentId)) {
       added = true;
       return { ...item, replies: [...(item.replies || []), reply] };
     }
@@ -166,9 +164,9 @@ export const appendUniqueRootComments = (
   current: ThreadCraftComment[],
   next: ThreadCraftComment[],
 ): ThreadCraftComment[] => {
-  const ids = new Set(current.map((comment) => idKey(comment.id)));
+  const ids = new Set(current.map((comment) => String(comment.id)));
   const uniqueNext = next.filter((comment) => {
-    const key = idKey(comment.id);
+    const key = String(comment.id);
     if (ids.has(key)) return false;
     ids.add(key);
     return true;
@@ -181,9 +179,9 @@ export const prependUniqueRootComments = (
   current: ThreadCraftComment[],
   older: ThreadCraftComment[],
 ): ThreadCraftComment[] => {
-  const ids = new Set(current.map((comment) => idKey(comment.id)));
+  const ids = new Set(current.map((comment) => String(comment.id)));
   const uniqueOlder = older.filter((comment) => {
-    const key = idKey(comment.id);
+    const key = String(comment.id);
     if (ids.has(key)) return false;
     ids.add(key);
     return true;

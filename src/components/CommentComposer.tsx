@@ -1,9 +1,10 @@
 import { useEffect, useId, useRef, useState } from "react";
-import type { FormEvent, JSX } from "react";
+import type { JSX, SyntheticEvent } from "react";
 import type {
   ThreadCraftAttachment,
   ThreadCraftComment,
   ThreadCraftIdentityFields,
+  ThreadCraftIdentityField,
   ThreadCraftReplyAuthorType,
   ThreadCraftSubmitPayload,
   ThreadCraftVariant,
@@ -21,6 +22,201 @@ const getDefaultReplyAuthorType = (
   const preferred = variant === "review" ? "business" : "support";
   return options?.includes(preferred) ? preferred : options?.[0] ?? preferred;
 };
+
+const getComposerReplyAuthorTypes = (
+  options: ThreadCraftReplyAuthorType[] | undefined,
+  variant: ThreadCraftVariant,
+): ThreadCraftReplyAuthorType[] => {
+  if (options?.length) return options;
+  if (variant === "review") return ["customer", "business"];
+  return ["support", "customer"];
+};
+
+const getComposerLabel = (
+  override: string | undefined,
+  replyingTo: ThreadCraftComment | null,
+  showRating: boolean,
+  variant: ThreadCraftVariant,
+): string => {
+  if (override) return override;
+  if (replyingTo) return "Write a reply";
+  if (showRating) return "Write a review";
+  return variant === "chat" ? "Send a message" : "Add a comment";
+};
+
+const getInputPlaceholder = (
+  override: string | undefined,
+  replyingTo: ThreadCraftComment | null,
+  showRating: boolean,
+  variant: ThreadCraftVariant,
+): string => {
+  if (override) return override;
+  if (replyingTo) return `Reply to ${replyingTo.author}…`;
+  if (showRating) return "Share your review…";
+  return variant === "chat" ? "Message the assistant…" : "Write a comment…";
+};
+
+const getSubmitLabel = (
+  override: string | undefined,
+  replyingTo: ThreadCraftComment | null,
+  variant: ThreadCraftVariant,
+): string => {
+  if (override) return override;
+  if (replyingTo) return "Reply";
+  return variant === "review" ? "Post review" : "Send";
+};
+
+const getSubmittingLabel = (override: string | undefined, variant: ThreadCraftVariant): string =>
+  override || (variant === "chat" ? "Thinking…" : "Posting…");
+
+const getIdentityError = (
+  identityFields: ThreadCraftIdentityFields | undefined,
+  authorName: string,
+  authorEmail: string,
+): string => {
+  if (identityFields?.authorName?.required && !authorName.trim()) return "Enter your name before posting.";
+  if (identityFields?.authorEmail?.required && !authorEmail.trim()) return "Enter your email before posting.";
+  if (authorEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authorEmail.trim())) {
+    return "Enter a valid email address.";
+  }
+  return "";
+};
+
+const IdentityInput = ({
+  field,
+  inputId,
+  value,
+  disabled,
+  onChange,
+}: {
+  field: ThreadCraftIdentityField;
+  inputId: string;
+  value: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+}): JSX.Element => (
+  <label className={styles.identityField} htmlFor={inputId}>
+    <span>{field.label}</span>
+    <input
+      autoComplete={field.keyboardType === "email-address" ? "email" : "name"}
+      disabled={disabled}
+      id={inputId}
+      placeholder={field.placeholder}
+      required={field.required}
+      type={field.keyboardType === "email-address" ? "email" : "text"}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  </label>
+);
+
+const ComposerIdentityFields = ({
+  identityFields,
+  nameId,
+  emailId,
+  authorName,
+  authorEmail,
+  disabled,
+  onAuthorNameChange,
+  onAuthorEmailChange,
+}: {
+  identityFields: ThreadCraftIdentityFields | undefined;
+  nameId: string;
+  emailId: string;
+  authorName: string;
+  authorEmail: string;
+  disabled: boolean;
+  onAuthorNameChange: (value: string) => void;
+  onAuthorEmailChange: (value: string) => void;
+}): JSX.Element | null => {
+  if (!identityFields?.authorName && !identityFields?.authorEmail) return null;
+  return (
+    <>
+      {identityFields.authorName && (
+        <IdentityInput
+          field={identityFields.authorName}
+          inputId={nameId}
+          value={authorName}
+          disabled={disabled}
+          onChange={onAuthorNameChange}
+        />
+      )}
+      {identityFields.authorEmail && (
+        <IdentityInput
+          field={identityFields.authorEmail}
+          inputId={emailId}
+          value={authorEmail}
+          disabled={disabled}
+          onChange={onAuthorEmailChange}
+        />
+      )}
+    </>
+  );
+};
+
+const ReplyBanner = ({
+  comment,
+  onCancel,
+}: {
+  comment: ThreadCraftComment | null;
+  onCancel: () => void;
+}): JSX.Element | null => {
+  if (!comment) return null;
+  return (
+    <div className={styles.replyBanner}>
+      <span className={styles.quoteIcon} aria-hidden="true">↳</span>
+      <div className={styles.replyCopy}>
+        <strong>Replying to {comment.author}</strong>
+        <span>{(comment.text ?? comment.body ?? "").slice(0, 140)}</span>
+      </div>
+      <button aria-label="Cancel reply" className={styles.cancelReply} type="button" onClick={onCancel}>
+        ×
+      </button>
+    </div>
+  );
+};
+
+const ComposerTools = ({
+  allowAttachments,
+  allowEmoji,
+  replyingTo,
+  replyAuthorTypes,
+  replyAuthorType,
+  variant,
+  disabled,
+  attachments,
+  onAttachmentsChange,
+  onEmojiSelect,
+  onReplyAuthorTypeChange,
+}: {
+  allowAttachments: boolean;
+  allowEmoji: boolean;
+  replyingTo: ThreadCraftComment | null;
+  replyAuthorTypes: ThreadCraftReplyAuthorType[];
+  replyAuthorType: ThreadCraftReplyAuthorType;
+  variant: ThreadCraftVariant;
+  disabled: boolean;
+  attachments: ThreadCraftAttachment[];
+  onAttachmentsChange: (files: ThreadCraftAttachment[]) => void;
+  onEmojiSelect: (emoji: string) => void;
+  onReplyAuthorTypeChange: (role: ThreadCraftReplyAuthorType) => void;
+}): JSX.Element => (
+  <div className={styles.tools}>
+    {allowAttachments && (
+      <AttachmentPicker attachments={attachments} disabled={disabled} onChange={onAttachmentsChange} />
+    )}
+    {allowEmoji && <EmojiPicker disabled={disabled} onSelect={onEmojiSelect} />}
+    {replyingTo && (
+      <ReplyRolePicker
+        disabled={disabled}
+        value={replyAuthorType}
+        variant={variant === "review" ? "review" : "issue"}
+        options={replyAuthorTypes}
+        onChange={onReplyAuthorTypeChange}
+      />
+    )}
+  </div>
+);
 
 interface CommentComposerProps {
   variant: ThreadCraftVariant;
@@ -92,10 +288,16 @@ const CommentComposer = ({
     setAuthorEmail(identityFields?.authorEmail?.value ?? "");
   }, [identityFields?.authorEmail?.value]);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
     const text = draft.trim();
     if (!text || sending || isSubmitting) return;
+
+    const identityError = getIdentityError(identityFields, authorName, authorEmail);
+    if (identityError) {
+      setError(identityError);
+      return;
+    }
 
     setSending(true);
     setError("");
@@ -124,79 +326,34 @@ const CommentComposer = ({
     inputRef.current?.focus();
   };
 
-  const label = composerLabel || (replyingTo
-    ? "Write a reply"
-    : showRating
-      ? "Write a review"
-      : variant === "chat"
-        ? "Send a message"
-        : "Add a comment");
+  const disabled = sending || isSubmitting;
+  const label = getComposerLabel(composerLabel, replyingTo, showRating, variant);
+  const placeholder = getInputPlaceholder(inputPlaceholder, replyingTo, showRating, variant);
+  const submitLabel = sending || isSubmitting
+    ? getSubmittingLabel(submittingLabel, variant)
+    : getSubmitLabel(submitButtonLabel, replyingTo, variant);
+  const resolvedReplyAuthorTypes = getComposerReplyAuthorTypes(replyAuthorTypes, variant);
 
   return (
     <form className={`${styles.composer} ${variant === "chat" ? styles.chatComposer : ""}`.trim()} onSubmit={(event) => void handleSubmit(event)}>
-      {replyingTo && (
-        <div className={styles.replyBanner}>
-          <span className={styles.quoteIcon} aria-hidden="true">↳</span>
-          <div className={styles.replyCopy}>
-            <strong>Replying to {replyingTo.author}</strong>
-            <span>{(replyingTo.text ?? replyingTo.body ?? "").slice(0, 140)}</span>
-          </div>
-          <button
-            aria-label="Cancel reply"
-            className={styles.cancelReply}
-            type="button"
-            onClick={onCancelReply}
-          >
-            ×
-          </button>
-        </div>
-      )}
-
+      <ReplyBanner comment={replyingTo} onCancel={onCancelReply} />
       {allowRatingInput && !replyingTo && <RatingPicker value={rating} onChange={setRating} />}
-
-      {identityFields?.authorName && (
-        <label className={styles.identityField} htmlFor={nameId}>
-          <span>{identityFields.authorName.label}</span>
-          <input
-            autoComplete="name"
-            disabled={sending || isSubmitting}
-            id={nameId}
-            placeholder={identityFields.authorName.placeholder}
-            required={identityFields.authorName.required}
-            value={authorName}
-            onChange={(event) => setAuthorName(event.target.value)}
-          />
-        </label>
-      )}
-
-      {identityFields?.authorEmail && (
-        <label className={styles.identityField} htmlFor={emailId}>
-          <span>{identityFields.authorEmail.label}</span>
-          <input
-            autoComplete="email"
-            disabled={sending || isSubmitting}
-            id={emailId}
-            placeholder={identityFields.authorEmail.placeholder}
-            required={identityFields.authorEmail.required}
-            type="email"
-            value={authorEmail}
-            onChange={(event) => setAuthorEmail(event.target.value)}
-          />
-        </label>
-      )}
-
+      <ComposerIdentityFields
+        identityFields={identityFields}
+        nameId={nameId}
+        emailId={emailId}
+        authorName={authorName}
+        authorEmail={authorEmail}
+        disabled={disabled}
+        onAuthorNameChange={setAuthorName}
+        onAuthorEmailChange={setAuthorEmail}
+      />
       <label className={styles.screenReaderOnly} htmlFor={inputId}>{label}</label>
       <textarea
         className={styles.input}
-        disabled={sending || isSubmitting}
+        disabled={disabled}
         id={inputId}
-        placeholder={inputPlaceholder ?? (replyingTo
-          ? `Reply to ${replyingTo.author}…`
-          : showRating
-            ? "Share your review…"
-            : variant === "chat"
-              ? "Message the assistant…"
-              : "Write a comment…")}
+        placeholder={placeholder}
         ref={inputRef}
         rows={3}
         value={draft}
@@ -211,28 +368,21 @@ const CommentComposer = ({
 
       {error && <p className={styles.error} role="alert">{error}</p>}
       <div className={styles.actions}>
-        <div className={styles.tools}>
-          {allowAttachments && (
-            <AttachmentPicker
-              attachments={attachments}
-              disabled={sending || isSubmitting}
-              onChange={setAttachments}
-            />
-          )}
-          {allowEmoji && <EmojiPicker disabled={sending || isSubmitting} onSelect={insertEmoji} />}
-          {replyingTo && (
-            <ReplyRolePicker
-              disabled={sending || isSubmitting}
-              value={replyAuthorType}
-              variant={variant === "review" ? "review" : "issue"}
-              onChange={setReplyAuthorType}
-            />
-          )}
-        </div>
-        <button className={styles.sendButton} disabled={sending || isSubmitting || !draft.trim()} type="submit">
-          {sending || isSubmitting
-            ? submittingLabel ?? (variant === "chat" ? "Thinking…" : "Posting…")
-            : submitButtonLabel ?? (replyingTo ? "Reply" : variant === "review" ? "Post review" : "Send")}
+        <ComposerTools
+          allowAttachments={allowAttachments}
+          allowEmoji={allowEmoji}
+          replyingTo={replyingTo}
+          replyAuthorTypes={resolvedReplyAuthorTypes}
+          replyAuthorType={replyAuthorType}
+          variant={variant}
+          disabled={disabled}
+          attachments={attachments}
+          onAttachmentsChange={setAttachments}
+          onEmojiSelect={insertEmoji}
+          onReplyAuthorTypeChange={setReplyAuthorType}
+        />
+        <button className={styles.sendButton} disabled={disabled || !draft.trim()} type="submit">
+          {submitLabel}
         </button>
       </div>
     </form>

@@ -48,47 +48,60 @@ export async function loadProviderModels(
   provider: ExampleAiProvider,
   apiKey: string,
 ): Promise<ThreadCraftChatModel[]> {
-  if (!apiKey.trim()) throw new Error(`Enter a ${provider === "gemini" ? "Gemini" : "Groq"} API key first.`);
+  if (!apiKey.trim()) throw new Error(`Enter a ${providerLabel(provider)} API key first.`);
+  if (provider === "groq") return loadGroqModels(apiKey.trim());
+  return loadGeminiModels(apiKey.trim());
+}
 
-  if (provider === "groq") {
-    const result = await requestJson<GroqModelResponse>("https://api.groq.com/openai/v1/models", {
-      headers: { Authorization: `Bearer ${apiKey.trim()}` },
-    });
-    const models = (result.data ?? [])
-      .filter((model) => model.id && model.active !== false)
-      .filter((model) => !/(whisper|speech|tts|embedding)/i.test(model.id ?? ""))
-      .map(({ id }) => ({ id: id as string, label: id as string }))
-      .sort((left, right) => left.id.localeCompare(right.id));
-    if (models.length === 0) throw new Error("No active text chat models were returned for this Groq key.");
-    return models;
-  }
+const providerLabel = (provider: ExampleAiProvider): string =>
+  provider === "gemini" ? "Gemini" : "Groq";
 
+const loadGroqModels = async (apiKey: string): Promise<ThreadCraftChatModel[]> => {
+  const result = await requestJson<GroqModelResponse>("https://api.groq.com/openai/v1/models", {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  const models = (result.data ?? [])
+    .filter((model) => model.id && model.active !== false)
+    .filter((model) => !/(whisper|speech|tts|embedding)/i.test(model.id ?? ""))
+    .map(({ id }) => ({ id: id as string, label: id as string }))
+    .sort((left, right) => left.id.localeCompare(right.id));
+  if (models.length === 0) throw new Error("No active text chat models were returned for this Groq key.");
+  return models;
+};
+
+const loadGeminiModels = async (apiKey: string): Promise<ThreadCraftChatModel[]> => {
   const models: ThreadCraftChatModel[] = [];
   const seenIds = new Set<string>();
-  let pageToken: string | undefined;
-  let pageCount = 0;
-  do {
-    const url = new URL("https://generativelanguage.googleapis.com/v1beta/models");
-    url.searchParams.set("pageSize", "1000");
-    if (pageToken) url.searchParams.set("pageToken", pageToken);
-    const page = await requestJson<GeminiModelResponse>(url.toString(), {
-      headers: { "x-goog-api-key": apiKey.trim() },
-    });
-    for (const model of page.models ?? []) {
-      if (!model.supportedGenerationMethods?.includes("generateContent")) continue;
-      const id = model.baseModelId ?? model.name?.replace(/^models\//, "");
-      if (!id || seenIds.has(id)) continue;
-      seenIds.add(id);
-      models.push({ id, label: model.displayName ? `${model.displayName} (${id})` : id });
-    }
-    pageToken = page.nextPageToken;
-    pageCount += 1;
-  } while (pageToken && pageCount < 10);
-
+  await loadGeminiModelPage(apiKey, undefined, models, seenIds, 0);
   models.sort((left, right) => left.id.localeCompare(right.id));
   if (models.length === 0) throw new Error("No Gemini models with text generation support were returned for this key.");
   return models;
-}
+};
+
+const loadGeminiModelPage = async (
+  apiKey: string,
+  pageToken: string | undefined,
+  models: ThreadCraftChatModel[],
+  seenIds: Set<string>,
+  pageCount: number,
+): Promise<void> => {
+  const url = new URL("https://generativelanguage.googleapis.com/v1beta/models");
+  url.searchParams.set("pageSize", "1000");
+  if (pageToken) url.searchParams.set("pageToken", pageToken);
+  const page = await requestJson<GeminiModelResponse>(url.toString(), {
+    headers: { "x-goog-api-key": apiKey },
+  });
+  for (const model of page.models ?? []) {
+    if (!model.supportedGenerationMethods?.includes("generateContent")) continue;
+    const id = model.baseModelId ?? model.name?.replace(/^models\//, "");
+    if (!id || seenIds.has(id)) continue;
+    seenIds.add(id);
+    models.push({ id, label: model.displayName ? `${model.displayName} (${id})` : id });
+  }
+  if (page.nextPageToken && pageCount < 9) {
+    await loadGeminiModelPage(apiKey, page.nextPageToken, models, seenIds, pageCount + 1);
+  }
+};
 
 interface GeminiGenerationResponse {
   candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;

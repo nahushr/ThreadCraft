@@ -50,7 +50,7 @@
   box-shadow: 0 0 0 3px rgb(49 94 251 / 12%);
 }
 
-.field select:disabled { color: #98a2b3; background: #f9fafb; }
+.field select:disabled { color: #667085; background: #f9fafb; }
 
 .loadButton {
   width: 100%;
@@ -68,7 +68,7 @@
 }
 
 .loadButton:hover:not(:disabled) { border-color: #b9c6ff; background: #edf1ff; }
-.loadButton:disabled { color: #98a2b3; border-color: #eaecf0; background: #f9fafb; cursor: wait; }
+.loadButton:disabled { color: #667085; border-color: #eaecf0; background: #f9fafb; cursor: wait; }
 .hiddenKeyActions { display: flex; }
 .status,
 .error { margin: -2px 0 0; font-size: 10px; }

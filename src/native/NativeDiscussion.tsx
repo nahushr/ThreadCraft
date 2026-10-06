@@ -7,6 +7,7 @@ import type {
   ThreadCraftDiscussionProps,
   ThreadCraftReplyAuthorType,
   ThreadCraftSubmitPayload,
+  ThreadCraftVariant,
 } from "../types";
 import { formatDate } from "../utils/formatDate";
 import { normalizeReactions } from "../utils/reactions";
@@ -23,6 +24,204 @@ const createCommentId = (): string => {
 
 const countComments = (comments: ThreadCraftComment[]): number =>
   comments.reduce((total, comment) => total + 1 + countComments(comment.replies || []), 0);
+
+const getDiscussionVariant = (
+  requestedVariant: ThreadCraftDiscussionProps["variant"],
+  data: ThreadCraftDiscussionProps["data"],
+): NonNullable<ThreadCraftDiscussionProps["variant"]> => requestedVariant || data.kind || "issue";
+
+const getNewCommentAuthorType = (
+  override: ThreadCraftDiscussionProps["newCommentAuthorType"],
+  variant: NonNullable<ThreadCraftDiscussionProps["variant"]>,
+): NonNullable<ThreadCraftDiscussionProps["newCommentAuthorType"]> => {
+  if (override) return override;
+  if (variant === "review") return "customer";
+  if (variant === "chat") return "user";
+  return "support";
+};
+
+const getReplyAuthorTypes = (
+  options: ThreadCraftDiscussionProps["replyAuthorTypes"],
+  variant: NonNullable<ThreadCraftDiscussionProps["variant"]>,
+): ThreadCraftReplyAuthorType[] => {
+  if (options?.length) return options;
+  if (variant === "review") return ["customer", "business"];
+  if (variant === "chat") return [];
+  return ["support", "customer"];
+};
+
+const getHeaderTitle = (variant: NonNullable<ThreadCraftDiscussionProps["variant"]>): string => {
+  if (variant === "review") return "Customer reviews";
+  if (variant === "chat") return "AI chat";
+  return "Discussion";
+};
+
+const getHeaderAuthorLabel = (variant: NonNullable<ThreadCraftDiscussionProps["variant"]>): string => {
+  if (variant === "review") return "Store";
+  if (variant === "chat") return "Assistant";
+  return "Opened by";
+};
+
+const getHeaderEyebrow = (
+  variant: NonNullable<ThreadCraftDiscussionProps["variant"]>,
+  id: ThreadCraftDiscussionProps["data"]["id"],
+): string => {
+  if (variant === "review") return "CUSTOMER REVIEWS";
+  if (variant === "chat") return "AI CHAT";
+  if (id == null) return "GITHUB ISSUE";
+  return `GITHUB ISSUE #${id}`;
+};
+
+const getStreamTitle = (variant: NonNullable<ThreadCraftDiscussionProps["variant"]>): string => {
+  if (variant === "review") return "Reviews";
+  if (variant === "chat") return "Messages";
+  return "Discussion";
+};
+
+const getCommentNoun = (variant: NonNullable<ThreadCraftDiscussionProps["variant"]>): string => {
+  if (variant === "review") return "reviews";
+  if (variant === "chat") return "messages";
+  return "comments";
+};
+
+const getSectionLabel = (variant: NonNullable<ThreadCraftDiscussionProps["variant"]>): string => {
+  if (variant === "review") return "Product reviews";
+  if (variant === "chat") return "Chat conversation";
+  return "Issue discussion";
+};
+
+const getEmptyMessage = (
+  override: string | undefined,
+  variant: NonNullable<ThreadCraftDiscussionProps["variant"]>,
+): string => {
+  if (override) return override;
+  if (variant === "chat") return "Start a conversation with the assistant.";
+  return "No replies yet. Start the conversation.";
+};
+
+const getLoadErrorMessage = (
+  override: string | undefined,
+  variant: NonNullable<ThreadCraftDiscussionProps["variant"]>,
+): string => {
+  if (override) return override;
+  if (variant === "chat") return "Could not load older messages. Please try again.";
+  return "Could not load more comments. Please try again.";
+};
+
+const getMoreButtonText = (
+  isLoading: boolean,
+  loadingLabel: string | undefined,
+  label: string | undefined,
+  variant: NonNullable<ThreadCraftDiscussionProps["variant"]>,
+): string => {
+  if (isLoading) {
+    if (loadingLabel) return loadingLabel;
+    if (variant === "chat") return "Loading older messages…";
+    return "Loading comments…";
+  }
+  if (label) return label;
+  if (variant === "chat") return "Load older messages";
+  return "See more comments";
+};
+
+const NativeDiscussionHeader = ({
+  data,
+  variant,
+}: {
+  data: ThreadCraftDiscussionProps["data"];
+  variant: ThreadCraftVariant;
+}): JSX.Element => {
+  const url = data.url;
+  return (
+    <View style={styles.header}>
+      <View style={styles.headerContent}>
+        <Text style={styles.eyebrow}>{getHeaderEyebrow(variant, data.id)}</Text>
+        <Text style={styles.title}>{data.title || getHeaderTitle(variant)}</Text>
+        {data.body ? <Text style={styles.headerBody}>{data.body}</Text> : null}
+        <View style={styles.detailRow}>
+          {data.author ? <Text style={styles.detail}>{getHeaderAuthorLabel(variant)} {data.author}</Text> : null}
+          {data.createdAt ? <Text style={styles.detail}>{formatDate(data.createdAt)}</Text> : null}
+          {data.status ? <Text style={styles.status}>{data.status}</Text> : null}
+        </View>
+      </View>
+      {url ? (
+        <Pressable onPress={() => void Linking.openURL(url)}>
+          <Text style={styles.externalLink}>{variant === "chat" ? "Open chat" : "View on GitHub"} ↗</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+};
+
+interface NativeMessagesProps {
+  data: ThreadCraftDiscussionProps["data"];
+  comments: ThreadCraftComment[];
+  variant: ThreadCraftVariant;
+  emptyMessage?: string;
+  typingIndicator: boolean;
+  typingIndicatorLabel?: string;
+  loadError: string;
+  showRating: boolean;
+  allowReplies: boolean;
+  allowReactions: boolean;
+  renderCommentBody: ThreadCraftDiscussionProps["renderCommentBody"];
+  reactionCounts: Record<string, Record<string, number>>;
+  selectedReactions: Record<string, string[]>;
+  moreButton: JSX.Element | null;
+  olderMessagesPlacement: "start" | "end";
+  onReply: (comment: ThreadCraftComment) => void;
+  onReact: (comment: ThreadCraftComment, emoji: string) => void;
+}
+
+const NativeMessages = ({
+  data,
+  comments,
+  variant,
+  emptyMessage,
+  typingIndicator,
+  typingIndicatorLabel,
+  loadError,
+  showRating,
+  allowReplies,
+  allowReactions,
+  renderCommentBody,
+  reactionCounts,
+  selectedReactions,
+  moreButton,
+  olderMessagesPlacement,
+  onReply,
+  onReact,
+}: NativeMessagesProps): JSX.Element => (
+  <>
+    {olderMessagesPlacement === "start" && moreButton}
+    {comments.length === 0 ? (
+      <Text style={styles.empty}>{getEmptyMessage(emptyMessage, variant)}</Text>
+    ) : comments.map((comment) => (
+      <NativeCommentCard
+        key={comment.id}
+        comment={comment}
+        authorTypeStyles={data.authorTypeStyles}
+        depth={0}
+        variant={variant}
+        renderCommentBody={renderCommentBody}
+        showRating={showRating}
+        allowReplies={allowReplies}
+        allowReactions={allowReactions}
+        reactionCounts={reactionCounts}
+        selectedReactions={selectedReactions}
+        onReply={onReply}
+        onReact={onReact}
+      />
+    ))}
+    {olderMessagesPlacement === "end" && moreButton}
+    {variant === "chat" && typingIndicator && (
+      <View accessibilityRole="progressbar" style={styles.typingIndicator}>
+        <Text style={styles.typingText}>{typingIndicatorLabel || "AI assistant is thinking…"}</Text>
+      </View>
+    )}
+    {loadError ? <Text accessibilityRole="alert" style={styles.error}>{loadError}</Text> : null}
+  </>
+);
 
 interface ChatScrollViewHandle {
   scrollTo: (options: { y: number; animated?: boolean }) => void;
@@ -67,7 +266,7 @@ const NativeDiscussion = ({
   onSubmitComment,
   onReact,
 }: ThreadCraftDiscussionProps): JSX.Element => {
-  const variant = requestedVariant || data.kind || "issue";
+  const variant = getDiscussionVariant(requestedVariant, data);
   const isChat = variant === "chat";
   const olderMessagesPlacement = loadMorePlacement || (isChat ? "start" : "end");
   const initialLimit = Math.max(1, initialRootLimit || 50);
@@ -91,14 +290,8 @@ const NativeDiscussion = ({
   const currentScrollOffset = useRef(0);
   const showRating = showRatingProp ?? (variant === "review" && data.showRating === true);
   const allowRatingInput = allowRatingInputProp ?? showRating;
-  const resolvedNewCommentAuthorType = newCommentAuthorType || (variant === "review" ? "customer" : isChat ? "user" : "support");
-  const resolvedReplyAuthorTypes = replyAuthorTypes?.length
-    ? replyAuthorTypes
-    : variant === "review"
-      ? ["customer", "business"] as ThreadCraftReplyAuthorType[]
-      : isChat
-        ? []
-        : ["support", "customer"] as ThreadCraftReplyAuthorType[];
+  const resolvedNewCommentAuthorType = getNewCommentAuthorType(newCommentAuthorType, variant);
+  const resolvedReplyAuthorTypes = getReplyAuthorTypes(replyAuthorTypes, variant);
 
   useEffect(() => {
     if (controlledComments) {
@@ -110,7 +303,7 @@ const NativeDiscussion = ({
       const olderHistory = isChat && !keyChanged && previousComments.length > 0 && incomingComments.length > previousComments.length &&
         String(incomingComments[0]?.id) !== String(previousComments[0]?.id) &&
         incomingComments.some((comment) => String(comment.id) === String(previousComments[0]?.id)) &&
-        String(incomingComments[incomingComments.length - 1]?.id) === String(previousComments[previousComments.length - 1]?.id);
+        String(incomingComments.at(-1)?.id) === String(previousComments.at(-1)?.id);
       if (olderHistory) preserveScroll.current = true;
       else if (isChat) scrollToBottom.current = true;
       lastSyncedData.current = { dataKey, comments: data.comments, hasMore: data.hasMore };
@@ -154,7 +347,7 @@ const NativeDiscussion = ({
     setReactionCounts((current) => ({
       ...current,
       [key]: {
-        ...(current[key] || {}),
+        ...current[key],
         [emoji]: Math.max(0, (current[key]?.[emoji] ?? initialCount) + (wasSelected ? -1 : 1)),
       },
     }));
@@ -186,7 +379,7 @@ const NativeDiscussion = ({
       }
       setVisibleRootCount((current) => current + nextComments.length);
     } catch {
-      setLoadError(loadMoreErrorText || (isChat ? "Could not load older messages. Please try again." : "Could not load more comments. Please try again."));
+      setLoadError(getLoadErrorMessage(loadMoreErrorText, variant));
     } finally {
       setLoadingMore(false);
     }
@@ -232,79 +425,43 @@ const NativeDiscussion = ({
     previousContentHeight.current = height;
   };
 
+  const moreButtonLabel = getMoreButtonText(loadingMore, loadingMoreLabel, loadMoreLabel, variant);
   const moreButton = canLoadMore ? (
     <Pressable accessibilityRole="button" disabled={loadingMore} style={styles.moreButton} onPress={() => void handleShowMore()}>
-      <Text style={styles.moreButtonText}>
-        {loadingMore
-          ? loadingMoreLabel || (isChat ? "Loading older messages…" : "Loading comments…")
-          : loadMoreLabel || (isChat ? "Load older messages" : "See more comments")}
-      </Text>
+      <Text style={styles.moreButtonText}>{moreButtonLabel}</Text>
     </Pressable>
   ) : null;
-  const headerTitle = variant === "review" ? "Customer reviews" : isChat ? "AI chat" : "Discussion";
-  const headerAuthorLabel = variant === "review" ? "Store" : isChat ? "Assistant" : "Opened by";
-  const streamTitle = variant === "review" ? "Reviews" : isChat ? "Messages" : "Discussion";
-
+  const streamTitle = getStreamTitle(variant);
   const messageContent = (
-    <>
-      {olderMessagesPlacement === "start" && moreButton}
-      {visibleComments.length === 0 ? (
-        <Text style={styles.empty}>{emptyMessage || (isChat ? "Start a conversation with the assistant." : "No replies yet. Start the conversation.")}</Text>
-      ) : visibleComments.map((comment) => (
-        <NativeCommentCard
-          key={comment.id}
-          comment={comment}
-          authorTypeStyles={data.authorTypeStyles}
-          depth={0}
-          variant={variant}
-          renderCommentBody={renderCommentBody}
-          showRating={showRating}
-          allowReplies={allowReplies}
-          allowReactions={allowReactions}
-          reactionCounts={reactionCounts}
-          selectedReactions={selectedReactions}
-          onReply={setReplyingTo}
-          onReact={handleReact}
-        />
-      ))}
-      {olderMessagesPlacement === "end" && moreButton}
-      {isChat && typingIndicator && (
-        <View accessibilityRole="progressbar" style={styles.typingIndicator}>
-          <Text style={styles.typingText}>{typingIndicatorLabel || "AI assistant is thinking…"}</Text>
-        </View>
-      )}
-      {loadError ? <Text accessibilityRole="alert" style={styles.error}>{loadError}</Text> : null}
-    </>
+    <NativeMessages
+      data={data}
+      comments={visibleComments}
+      variant={variant}
+      emptyMessage={emptyMessage}
+      typingIndicator={typingIndicator}
+      typingIndicatorLabel={typingIndicatorLabel}
+      loadError={loadError}
+      showRating={showRating}
+      allowReplies={allowReplies}
+      allowReactions={allowReactions}
+      renderCommentBody={renderCommentBody}
+      reactionCounts={reactionCounts}
+      selectedReactions={selectedReactions}
+      moreButton={moreButton}
+      olderMessagesPlacement={olderMessagesPlacement}
+      onReply={setReplyingTo}
+      onReact={handleReact}
+    />
   );
 
   return (
-    <View accessibilityLabel={variant === "review" ? "Product reviews" : isChat ? "Chat conversation" : "Issue discussion"} style={[styles.root, isChat && styles.chatRoot]}>
-      {showHeader && (
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <Text style={styles.eyebrow}>
-              {variant === "review" ? "CUSTOMER REVIEWS" : isChat ? "AI CHAT" : `GITHUB ISSUE${data.id != null ? ` #${data.id}` : ""}`}
-            </Text>
-            <Text style={styles.title}>{data.title || headerTitle}</Text>
-            {data.body ? <Text style={styles.headerBody}>{data.body}</Text> : null}
-            <View style={styles.detailRow}>
-              {data.author ? <Text style={styles.detail}>{headerAuthorLabel} {data.author}</Text> : null}
-              {data.createdAt ? <Text style={styles.detail}>{formatDate(data.createdAt)}</Text> : null}
-              {data.status ? <Text style={styles.status}>{data.status}</Text> : null}
-            </View>
-          </View>
-          {data.url ? (
-            <Pressable onPress={() => void Linking.openURL(data.url!)}>
-              <Text style={styles.externalLink}>{isChat ? "Open chat" : "View on GitHub"} ↗</Text>
-            </Pressable>
-          ) : null}
-        </View>
-      )}
+    <View accessibilityLabel={getSectionLabel(variant)} style={[styles.root, isChat && styles.chatRoot]}>
+      {showHeader && <NativeDiscussionHeader data={data} variant={variant} />}
 
       {showStreamHeading && (
         <View style={styles.streamHeading}>
           <Text style={styles.streamTitle}>{streamTitle}</Text>
-          <Text style={styles.streamCount}>{totalCommentCount} {variant === "review" ? "reviews" : isChat ? "messages" : "comments"}</Text>
+          <Text style={styles.streamCount}>{totalCommentCount} {getCommentNoun(variant)}</Text>
         </View>
       )}
 

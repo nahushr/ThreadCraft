@@ -41,6 +41,65 @@ const getDefaultReplyAuthorType = (
   return options.includes(preferred) ? preferred : options[0] || preferred;
 };
 
+const getIdentityError = (
+  identityFields: ThreadCraftIdentityFields | undefined,
+  authorName: string,
+  authorEmail: string,
+): string => {
+  if (identityFields?.authorName?.required && !authorName.trim()) return "Enter your name before posting.";
+  if (identityFields?.authorEmail?.required && !authorEmail.trim()) return "Enter your email before posting.";
+  if (authorEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authorEmail.trim())) {
+    return "Enter a valid email address.";
+  }
+  return "";
+};
+
+const getComposerLabel = (
+  override: string | undefined,
+  variant: ThreadCraftVariant,
+  replyingTo: ThreadCraftComment | null,
+  showRating: boolean,
+): string => {
+  if (override) return override;
+  if (variant === "chat") return "Send a message";
+  if (replyingTo) return "Write a reply";
+  if (showRating) return "Write a review";
+  return "Add a comment";
+};
+
+const getInputPlaceholder = (
+  override: string | undefined,
+  variant: ThreadCraftVariant,
+  replyingTo: ThreadCraftComment | null,
+  showRating: boolean,
+): string => {
+  if (override) return override;
+  if (replyingTo) return `Reply to ${replyingTo.author}…`;
+  if (showRating) return "Share your review…";
+  if (variant === "chat") return "Message the assistant…";
+  return "Write a comment…";
+};
+
+const getSubmitLabel = (
+  override: string | undefined,
+  submittingLabel: string | undefined,
+  isSubmitting: boolean,
+  sending: boolean,
+  variant: ThreadCraftVariant,
+  replyingTo: ThreadCraftComment | null,
+): string => {
+  if (sending || isSubmitting) {
+    if (submittingLabel) return submittingLabel;
+    return variant === "chat" ? "Thinking…" : "Posting…";
+  }
+  if (override) return override;
+  if (replyingTo) return "Reply";
+  if (variant === "review") return "Post review";
+  return "Send";
+};
+
+const IMAGE_EXTENSIONS = new Set(["avif", "gif", "jpeg", "jpg", "png", "webp"]);
+
 const IdentityInput = ({
   field,
   value,
@@ -65,8 +124,109 @@ const IdentityInput = ({
   </View>
 );
 
-const isImageAttachment = (attachment: ThreadCraftAttachment): boolean =>
-  Boolean(attachment.mimeType?.startsWith("image/")) || /\.(?:avif|gif|jpe?g|png|webp)$/i.test(attachment.name);
+const NativeReplyBanner = ({
+  comment,
+  onCancel,
+}: {
+  comment: ThreadCraftComment;
+  onCancel: () => void;
+}): JSX.Element => (
+  <View style={styles.replyBanner}>
+    <View style={styles.replyBannerCopy}>
+      <Text style={styles.replyBannerTitle}>↳ Replying to {comment.author}</Text>
+      <Text numberOfLines={2} style={styles.replyBannerText}>{comment.text || comment.body || ""}</Text>
+    </View>
+    <Pressable accessibilityRole="button" onPress={onCancel}>
+      <Text style={styles.replyActionText}>×</Text>
+    </Pressable>
+  </View>
+);
+
+const NativeRatingPicker = ({
+  rating,
+  onChange,
+}: {
+  rating: number;
+  onChange: (value: number) => void;
+}): JSX.Element => (
+  <View>
+    <Text style={styles.fieldLabel}>Your rating</Text>
+    <View style={styles.starRow}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Pressable key={star} style={styles.starButton} onPress={() => onChange(star)}>
+          <Text style={styles.starText}>{star <= rating ? "★" : "☆"}</Text>
+        </Pressable>
+      ))}
+    </View>
+  </View>
+);
+
+const NativeAttachmentList = ({
+  attachments,
+  onRemove,
+}: {
+  attachments: ThreadCraftAttachment[];
+  onRemove: (index: number) => void;
+}): JSX.Element | null => {
+  if (!attachments.length) return null;
+  return (
+    <View style={styles.selectedFiles}>
+      {attachments.map((attachment, index) => (
+        <View key={`${attachment.name}-${index}`} style={styles.fileChip}>
+          <Text numberOfLines={1} style={styles.fileChipText}>📎 {attachment.name}</Text>
+          <Pressable accessibilityRole="button" onPress={() => onRemove(index)}>
+            <Text style={styles.fileRemove}>×</Text>
+          </Pressable>
+        </View>
+      ))}
+    </View>
+  );
+};
+
+const NativeReplyRoleControl = ({
+  replyAuthorTypes,
+  replyAuthorType,
+  roleMenuOpen,
+  onToggle,
+  onChange,
+}: {
+  replyAuthorTypes: ThreadCraftReplyAuthorType[];
+  replyAuthorType: ThreadCraftReplyAuthorType;
+  roleMenuOpen: boolean;
+  onToggle: () => void;
+  onChange: (role: ThreadCraftReplyAuthorType) => void;
+}): JSX.Element => {
+  if (replyAuthorTypes.length < 2) {
+    return <Text style={styles.toolButtonText}>Replying as {replyAuthorType}</Text>;
+  }
+  return (
+    <View style={styles.roleWrap}>
+      <Pressable accessibilityRole="button" style={styles.toolButton} onPress={onToggle}>
+        <Text style={styles.toolButtonText}>Replying as {replyAuthorType}</Text>
+        <Text style={styles.toolButtonText}>⌄</Text>
+      </Pressable>
+      {roleMenuOpen && (
+        <View style={styles.roleMenu}>
+          {replyAuthorTypes.map((role) => (
+            <Pressable
+              key={role}
+              style={[styles.roleOption, replyAuthorType === role && styles.roleOptionSelected]}
+              onPress={() => onChange(role)}
+            >
+              <Text style={styles.roleOptionText}>{role[0].toUpperCase() + role.slice(1)}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+};
+
+const isImageAttachment = (attachment: ThreadCraftAttachment): boolean => {
+  if (attachment.mimeType?.startsWith("image/")) return true;
+  const extension = attachment.name.split(".").at(-1)?.toLowerCase() ?? "";
+  return IMAGE_EXTENSIONS.has(extension);
+};
 
 const NativeComposer = ({
   variant,
@@ -126,16 +286,9 @@ const NativeComposer = ({
   const handleSubmit = async (): Promise<void> => {
     const text = draft.trim();
     if (!text || sending || isSubmitting) return;
-    if (identityFields?.authorName?.required && !authorName.trim()) {
-      setError("Enter your name before posting.");
-      return;
-    }
-    if (identityFields?.authorEmail?.required && !authorEmail.trim()) {
-      setError("Enter your email before posting.");
-      return;
-    }
-    if (authorEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authorEmail.trim())) {
-      setError("Enter a valid email address.");
+    const identityError = getIdentityError(identityFields, authorName, authorEmail);
+    if (identityError) {
+      setError(identityError);
       return;
     }
 
@@ -161,31 +314,28 @@ const NativeComposer = ({
     }
   };
 
+  const composerLabelText = getComposerLabel(composerLabel, variant, replyingTo, showRating);
+  const placeholder = getInputPlaceholder(inputPlaceholder, variant, replyingTo, showRating);
+  const sendLabel = getSubmitLabel(
+    submitButtonLabel,
+    submittingLabel,
+    isSubmitting,
+    sending,
+    variant,
+    replyingTo,
+  );
+  const sendDisabled = sending || isSubmitting || !draft.trim();
+  const handleReplyAuthorChange = (role: ThreadCraftReplyAuthorType): void => {
+    setReplyAuthorType(role);
+    setRoleMenuOpen(false);
+  };
+
   return (
     <View style={styles.composer}>
-      {replyingTo && (
-        <View style={styles.replyBanner}>
-          <View style={styles.replyBannerCopy}>
-            <Text style={styles.replyBannerTitle}>↳ Replying to {replyingTo.author}</Text>
-            <Text numberOfLines={2} style={styles.replyBannerText}>{replyingTo.text || replyingTo.body || ""}</Text>
-          </View>
-          <Pressable accessibilityRole="button" onPress={onCancelReply}>
-            <Text style={styles.replyActionText}>×</Text>
-          </Pressable>
-        </View>
-      )}
+      {replyingTo && <NativeReplyBanner comment={replyingTo} onCancel={onCancelReply} />}
 
       {allowRatingInput && !replyingTo && (
-        <View>
-          <Text style={styles.fieldLabel}>Your rating</Text>
-          <View style={styles.starRow}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Pressable key={star} style={styles.starButton} onPress={() => setRating(star)}>
-                <Text style={styles.starText}>{star <= rating ? "★" : "☆"}</Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
+        <NativeRatingPicker rating={rating} onChange={setRating} />
       )}
 
       {identityFields?.authorName && (
@@ -198,8 +348,8 @@ const NativeComposer = ({
       <TextInput
         multiline
         numberOfLines={3}
-        accessibilityLabel={composerLabel || (variant === "chat" ? "Send a message" : replyingTo ? "Write a reply" : showRating ? "Write a review" : "Add a comment")}
-        placeholder={inputPlaceholder || (replyingTo ? `Reply to ${replyingTo.author}…` : showRating ? "Share your review…" : variant === "chat" ? "Message the assistant…" : "Write a comment…")}
+        accessibilityLabel={composerLabelText}
+        placeholder={placeholder}
         editable={!sending && !isSubmitting}
         placeholderTextColor="#98a2b3"
         style={[styles.input, styles.textarea]}
@@ -207,18 +357,10 @@ const NativeComposer = ({
         onChangeText={setDraft}
       />
 
-      {!!attachments.length && (
-        <View style={styles.selectedFiles}>
-          {attachments.map((attachment, index) => (
-            <View key={`${attachment.name}-${index}`} style={styles.fileChip}>
-              <Text numberOfLines={1} style={styles.fileChipText}>📎 {attachment.name}</Text>
-              <Pressable accessibilityRole="button" onPress={() => setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))}>
-                <Text style={styles.fileRemove}>×</Text>
-              </Pressable>
-            </View>
-          ))}
-        </View>
-      )}
+      <NativeAttachmentList
+        attachments={attachments}
+        onRemove={(index) => setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+      />
 
       {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
       <View style={styles.toolRow}>
@@ -232,37 +374,23 @@ const NativeComposer = ({
             <Text>😀</Text><Text style={styles.toolButtonText}>Emoji</Text>
           </Pressable>
         )}
-        {replyingTo && replyAuthorTypes.length > 1 ? (
-          <View style={styles.roleWrap}>
-            <Pressable accessibilityRole="button" style={styles.toolButton} onPress={() => setRoleMenuOpen((open) => !open)}>
-              <Text style={styles.toolButtonText}>Replying as {replyAuthorType}</Text>
-              <Text style={styles.toolButtonText}>⌄</Text>
-            </Pressable>
-            {roleMenuOpen && (
-              <View style={styles.roleMenu}>
-                {replyAuthorTypes.map((role) => (
-                  <Pressable
-                    key={role}
-                    style={[styles.roleOption, replyAuthorType === role && styles.roleOptionSelected]}
-                    onPress={() => { setReplyAuthorType(role); setRoleMenuOpen(false); }}
-                  >
-                    <Text style={styles.roleOptionText}>{role[0].toUpperCase() + role.slice(1)}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            )}
-          </View>
-        ) : replyingTo ? (
-          <Text style={styles.toolButtonText}>Replying as {replyAuthorType}</Text>
-        ) : null}
+        {replyingTo && (
+          <NativeReplyRoleControl
+            replyAuthorTypes={replyAuthorTypes}
+            replyAuthorType={replyAuthorType}
+            roleMenuOpen={roleMenuOpen}
+            onToggle={() => setRoleMenuOpen((open) => !open)}
+            onChange={handleReplyAuthorChange}
+          />
+        )}
         <View style={styles.flexSpacer} />
         <Pressable
           accessibilityRole="button"
-          disabled={sending || isSubmitting || !draft.trim()}
-          style={[styles.sendButton, (sending || isSubmitting || !draft.trim()) && styles.sendDisabled]}
+          disabled={sendDisabled}
+          style={[styles.sendButton, sendDisabled && styles.sendDisabled]}
           onPress={() => void handleSubmit()}
         >
-          <Text style={styles.sendText}>{sending || isSubmitting ? submittingLabel || (variant === "chat" ? "Thinking…" : "Posting…") : submitButtonLabel || (replyingTo ? "Reply" : variant === "review" ? "Post review" : "Send")}</Text>
+          <Text style={styles.sendText}>{sendLabel}</Text>
         </Pressable>
       </View>
 

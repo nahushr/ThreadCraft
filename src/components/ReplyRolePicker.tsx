@@ -10,6 +10,11 @@ interface ReplyRolePickerProps {
   onChange: (role: ThreadCraftReplyAuthorType) => void;
 }
 
+const getDefaultRoleOptions = (variant: "issue" | "review"): ThreadCraftReplyAuthorType[] => {
+  if (variant === "review") return ["customer", "business"];
+  return ["support", "customer"];
+};
+
 const ReplyRolePicker = ({
   variant,
   value,
@@ -17,15 +22,7 @@ const ReplyRolePicker = ({
   disabled = false,
   onChange,
 }: ReplyRolePickerProps): JSX.Element => {
-  const roleOptions: ThreadCraftReplyAuthorType[] = options?.length ? options : variant === "review"
-    ? [
-      "customer",
-      "business",
-    ]
-    : [
-      "support",
-      "customer",
-    ];
+  const roleOptions: ThreadCraftReplyAuthorType[] = options?.length ? options : getDefaultRoleOptions(variant);
   const label = (role: ThreadCraftReplyAuthorType): string =>
     role.charAt(0).toUpperCase() + role.slice(1);
 

@@ -4,7 +4,9 @@ import type {
   ThreadCraftComment,
   ThreadCraftDiscussionProps,
   ThreadCraftId,
+  ThreadCraftReplyAuthorType,
   ThreadCraftSubmitPayload,
+  ThreadCraftVariant,
 } from "./types";
 import {
   appendReplyToTree,
@@ -41,6 +43,322 @@ const countComments = (comments: ThreadCraftComment[]): number =>
 const getParentId = (comment: ThreadCraftComment | null): ThreadCraftId | undefined =>
   comment?.id;
 
+const getDiscussionVariant = (
+  requestedVariant: ThreadCraftDiscussionProps["variant"],
+  data: ThreadCraftDiscussionProps["data"],
+): NonNullable<ThreadCraftDiscussionProps["variant"]> => requestedVariant || data.kind || "issue";
+
+const getNewCommentAuthorType = (
+  override: ThreadCraftDiscussionProps["newCommentAuthorType"],
+  variant: NonNullable<ThreadCraftDiscussionProps["variant"]>,
+): NonNullable<ThreadCraftDiscussionProps["newCommentAuthorType"]> => {
+  if (override) return override;
+  if (variant === "review") return "customer";
+  if (variant === "chat") return "user";
+  return "support";
+};
+
+const getReplyAuthorTypes = (
+  options: ThreadCraftDiscussionProps["replyAuthorTypes"],
+  variant: NonNullable<ThreadCraftDiscussionProps["variant"]>,
+): NonNullable<ThreadCraftDiscussionProps["replyAuthorTypes"]> => {
+  if (options?.length) return options;
+  if (variant === "review") return ["customer", "business"];
+  if (variant === "chat") return [];
+  return ["support", "customer"];
+};
+
+const getSectionTitle = (variant: NonNullable<ThreadCraftDiscussionProps["variant"]>): string => {
+  if (variant === "review") return "Customer reviews";
+  if (variant === "chat") return "Messages";
+  return "Discussion";
+};
+
+const getSectionLabel = (variant: NonNullable<ThreadCraftDiscussionProps["variant"]>): string => {
+  if (variant === "review") return "Product reviews";
+  if (variant === "chat") return "Chat conversation";
+  return "Issue discussion";
+};
+
+const getCommentNoun = (variant: NonNullable<ThreadCraftDiscussionProps["variant"]>): string => {
+  if (variant === "review") return "reviews";
+  if (variant === "chat") return "messages";
+  return "comments";
+};
+
+const getEmptyStateText = (
+  override: string | undefined,
+  variant: NonNullable<ThreadCraftDiscussionProps["variant"]>,
+): string => {
+  if (override) return override;
+  if (variant === "chat") return "Start a conversation with the assistant.";
+  return "No replies yet. Start the conversation.";
+};
+
+const getMoreButtonText = (
+  loading: boolean,
+  loadingLabel: string | undefined,
+  label: string | undefined,
+  variant: NonNullable<ThreadCraftDiscussionProps["variant"]>,
+): string => {
+  if (loading) {
+    if (loadingLabel) return loadingLabel;
+    if (variant === "chat") return "Loading older messages…";
+    return "Loading comments…";
+  }
+  if (label) return label;
+  if (variant === "chat") return "Load older messages";
+  return "See more comments";
+};
+
+const getLoadErrorText = (
+  override: string | undefined,
+  variant: NonNullable<ThreadCraftDiscussionProps["variant"]>,
+): string => {
+  if (override) return override;
+  if (variant === "chat") return "Could not load older messages. Please try again.";
+  return "Could not load more comments. Please try again.";
+};
+
+interface DiscussionConversationProps {
+  data: ThreadCraftDiscussionProps["data"];
+  variant: ThreadCraftVariant;
+  isChat: boolean;
+  showStreamHeading: boolean;
+  sectionTitle: string;
+  commentCount: number;
+  olderMessagesPlacement: "start" | "end";
+  streamRef: { current: HTMLDivElement | null };
+  canLoadMore: boolean;
+  loadingMore: boolean;
+  moreButtonLabel: string;
+  onShowMore: () => void;
+  visibleComments: ThreadCraftComment[];
+  emptyMessage: string | undefined;
+  loadError: string;
+  typingIndicator: boolean;
+  typingIndicatorLabel: string | undefined;
+  showRating: boolean;
+  allowReplies: boolean;
+  allowReactions: boolean;
+  renderCommentBody: ThreadCraftDiscussionProps["renderCommentBody"];
+  reactionCounts: Record<string, Record<string, number>>;
+  selectedReactions: Record<string, string[]>;
+  onReply: (comment: ThreadCraftComment) => void;
+  onReact: (comment: ThreadCraftComment, emoji: string) => void;
+  allowNewComments: boolean;
+  allowAttachments: boolean;
+  allowEmoji: boolean;
+  allowRatingInput: boolean;
+  replyAuthorTypes: ThreadCraftReplyAuthorType[];
+  newCommentAuthorType: ThreadCraftReplyAuthorType;
+  identityFields: ThreadCraftDiscussionProps["identityFields"];
+  inputPlaceholder: string | undefined;
+  composerLabel: string | undefined;
+  submitButtonLabel: string | undefined;
+  submittingLabel: string | undefined;
+  isSubmitting: boolean;
+  replyingTo: ThreadCraftComment | null;
+  onCancelReply: () => void;
+  onSubmit: (payload: ThreadCraftSubmitPayload) => Promise<void>;
+}
+
+interface ChatModelSettingsProps {
+  id: string;
+  titleId: string;
+  panelRef: { current: HTMLDialogElement | null };
+  triggerRef: { current: HTMLButtonElement | null };
+  open: boolean;
+  providerLabel: string;
+  modelLabel: string;
+  controls: JSX.Element | null;
+  onOpen: () => void;
+  onClose: () => void;
+}
+
+const getChangeModelLabel = (providerLabel: string, modelLabel: string): string => {
+  let label = `Change AI model. ${providerLabel}`;
+  if (modelLabel) label += `, ${modelLabel}`;
+  return label;
+};
+
+const ChatModelSettings = ({
+  id,
+  titleId,
+  panelRef,
+  triggerRef,
+  open,
+  providerLabel,
+  modelLabel,
+  controls,
+  onOpen,
+  onClose,
+}: ChatModelSettingsProps): JSX.Element => (
+  <>
+    {open && (
+      <button
+        aria-label="Close AI model settings"
+        className={styles.chatSettingsScrim}
+        type="button"
+        onClick={onClose}
+      />
+    )}
+    <dialog
+      aria-labelledby={titleId}
+      aria-modal={open ? "true" : undefined}
+      className={[styles.chatSettingsPanel, open ? styles.chatSettingsPanelOpen : ""].filter(Boolean).join(" ")}
+      id={id}
+      open
+      ref={panelRef}
+      tabIndex={-1}
+    >
+      <div className={styles.chatSettingsHeading}>
+        <div>
+          <span className={styles.chatSettingsEyebrow}>MODEL CONFIGURATION</span>
+          <h2 id={titleId}>AI model</h2>
+          <p>Choose the provider and model for this conversation.</p>
+        </div>
+        <button aria-label="Close AI model settings" className={styles.chatSettingsClose} type="button" onClick={onClose}>
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      {controls}
+    </dialog>
+    <button
+      aria-controls={id}
+      aria-expanded={open}
+      aria-haspopup="dialog"
+      aria-label={getChangeModelLabel(providerLabel, modelLabel)}
+      className={styles.chatSettingsTrigger}
+      ref={triggerRef}
+      type="button"
+      onClick={onOpen}
+    >
+      <span className={styles.chatSettingsTriggerCopy}>
+        <span className={styles.chatSettingsTriggerLabel}>AI model</span>
+        <strong>{providerLabel}</strong>
+        {modelLabel && <span className={styles.chatSettingsTriggerModel}>{modelLabel}</span>}
+      </span>
+      <span className={styles.chatSettingsTriggerAction}>Change</span>
+    </button>
+  </>
+);
+
+const DiscussionConversation = ({
+  data,
+  variant,
+  isChat,
+  showStreamHeading,
+  sectionTitle,
+  commentCount,
+  olderMessagesPlacement,
+  streamRef,
+  canLoadMore,
+  loadingMore,
+  moreButtonLabel,
+  onShowMore,
+  visibleComments,
+  emptyMessage,
+  loadError,
+  typingIndicator,
+  typingIndicatorLabel,
+  showRating,
+  allowReplies,
+  allowReactions,
+  renderCommentBody,
+  reactionCounts,
+  selectedReactions,
+  onReply,
+  onReact,
+  allowNewComments,
+  allowAttachments,
+  allowEmoji,
+  allowRatingInput,
+  replyAuthorTypes,
+  newCommentAuthorType,
+  identityFields,
+  inputPlaceholder,
+  composerLabel,
+  submitButtonLabel,
+  submittingLabel,
+  isSubmitting,
+  replyingTo,
+  onCancelReply,
+  onSubmit,
+}: DiscussionConversationProps): JSX.Element => {
+  const moreButton = canLoadMore ? (
+    <button
+      className={`${styles.moreButton} ${olderMessagesPlacement === "start" ? styles.chatMoreButtonStart : ""}`}
+      disabled={loadingMore}
+      type="button"
+      onClick={onShowMore}
+    >
+      {moreButtonLabel}
+    </button>
+  ) : null;
+
+  return (
+    <>
+      {showStreamHeading && (
+        <div className={styles.streamHeading}>
+          <strong>{sectionTitle}</strong>
+          <span>{data.totalRootComments ?? commentCount} {getCommentNoun(variant)}</span>
+        </div>
+      )}
+      <div
+        aria-label={isChat ? "Conversation messages" : undefined}
+        className={[styles.stream, isChat ? styles.chatStream : ""].filter(Boolean).join(" ")}
+        ref={streamRef}
+        role={isChat ? "region" : undefined}
+      >
+        {olderMessagesPlacement === "start" && moreButton}
+        {visibleComments.length === 0 ? (
+          <p className={styles.empty}>{getEmptyStateText(emptyMessage, variant)}</p>
+        ) : visibleComments.map((comment) => (
+          <CommentThread
+            key={comment.id}
+            comment={comment}
+            authorTypeStyles={data.authorTypeStyles}
+            depth={0}
+            showRating={showRating}
+            allowReplies={allowReplies}
+            allowReactions={allowReactions}
+            variant={variant}
+            renderCommentBody={renderCommentBody}
+            onReply={onReply}
+            reactionCounts={reactionCounts}
+            selectedReactions={selectedReactions}
+            onReact={onReact}
+          />
+        ))}
+        {olderMessagesPlacement === "end" && moreButton}
+        {isChat && typingIndicator && <ChatTypingIndicator label={typingIndicatorLabel} />}
+        {loadError && <p className={styles.error} role="alert">{loadError}</p>}
+      </div>
+      {(allowNewComments || (allowReplies && replyingTo != null)) && (
+        <CommentComposer
+          variant={variant}
+          showRating={showRating}
+          allowRatingInput={allowRatingInput}
+          allowAttachments={allowAttachments}
+          allowEmoji={allowEmoji}
+          replyAuthorTypes={replyAuthorTypes}
+          newCommentAuthorType={newCommentAuthorType}
+          identityFields={identityFields}
+          inputPlaceholder={inputPlaceholder}
+          composerLabel={composerLabel}
+          submitButtonLabel={submitButtonLabel}
+          submittingLabel={submittingLabel}
+          isSubmitting={isSubmitting}
+          replyingTo={replyingTo}
+          onCancelReply={onCancelReply}
+          onSubmit={onSubmit}
+        />
+      )}
+    </>
+  );
+};
+
 const isOlderHistory = (
   current: ThreadCraftComment[],
   next: ThreadCraftComment[],
@@ -49,7 +367,7 @@ const isOlderHistory = (
   next.length > current.length &&
   String(next[0]?.id) !== String(current[0]?.id) &&
   next.some((comment) => String(comment.id) === String(current[0]?.id)) &&
-  String(next[next.length - 1]?.id) === String(current[current.length - 1]?.id),
+  String(next.at(-1)?.id) === String(current.at(-1)?.id),
 );
 
 const Discussion = ({
@@ -98,7 +416,7 @@ const Discussion = ({
   onSubmitComment,
   onReact,
 }: ThreadCraftDiscussionProps): JSX.Element => {
-  const variant = requestedVariant || data.kind || "issue";
+  const variant = getDiscussionVariant(requestedVariant, data);
   const isChat = variant === "chat";
   const allowReactions = allowReactionsProp ?? !isChat;
   const allowEmoji = allowEmojiProp ?? !isChat;
@@ -127,21 +445,15 @@ const Discussion = ({
   const [chatSettingsOpen, setChatSettingsOpen] = useState(false);
   const chatSettingsId = useId();
   const chatSettingsTriggerRef = useRef<HTMLButtonElement | null>(null);
-  const chatSettingsPanelRef = useRef<HTMLElement | null>(null);
+  const chatSettingsPanelRef = useRef<HTMLDialogElement | null>(null);
   const lastDataKey = useRef(dataKey);
   const lastSyncedData = useRef({ dataKey, comments: data.comments, hasMore: data.hasMore });
   const streamRef = useRef<HTMLDivElement | null>(null);
   const scrollIntent = useRef<{ kind: "bottom" } | { kind: "preserve"; top: number; height: number }>({ kind: "bottom" });
   const showRating = showRatingProp ?? (variant === "review" && data.showRating === true);
   const allowRatingInput = allowRatingInputProp ?? showRating;
-  const resolvedNewCommentAuthorType = newCommentAuthorType ?? (variant === "review" ? "customer" : isChat ? "user" : "support");
-  const resolvedReplyAuthorTypes = replyAuthorTypes?.length
-    ? replyAuthorTypes
-    : variant === "review"
-      ? ["customer", "business"] as const
-      : isChat
-        ? [] as const
-        : ["support", "customer"] as const;
+  const resolvedNewCommentAuthorType = getNewCommentAuthorType(newCommentAuthorType, variant);
+  const resolvedReplyAuthorTypes = getReplyAuthorTypes(replyAuthorTypes, variant);
   const resolvedChatProvider = chatProviders.some(({ id }) => id === (selectedChatProvider ?? localChatProvider))
     ? selectedChatProvider ?? localChatProvider
     : chatProviders[0]?.id ?? "";
@@ -220,7 +532,8 @@ const Discussion = ({
         return;
       }
       const first = focusable[0];
-      const last = focusable[focusable.length - 1];
+      const last = focusable.at(-1);
+      if (!last) return;
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last.focus();
@@ -240,7 +553,7 @@ const Discussion = ({
   const visibleComments = comments.slice(0, visibleRootCount);
   const canLoadMore = comments.length > visibleRootCount || (hasMore && Boolean(onLoadMore));
   const commentCount = countComments(comments);
-  const sectionTitle = variant === "review" ? "Customer reviews" : isChat ? "Messages" : "Discussion";
+  const sectionTitle = getSectionTitle(variant);
 
   const handleReply = (comment: ThreadCraftComment): void => {
     setReplyingTo(comment);
@@ -260,9 +573,9 @@ const Discussion = ({
     setReactionCounts((current) => {
       const currentCount = current[commentKey]?.[emoji] ?? initialCount;
       return {
-        ...current,
-        [commentKey]: {
-          ...(current[commentKey] || {}),
+      ...current,
+      [commentKey]: {
+          ...current[commentKey],
           [emoji]: Math.max(0, currentCount + (wasSelected ? -1 : 1)),
         },
       };
@@ -297,7 +610,7 @@ const Discussion = ({
       }
       setVisibleRootCount((current) => current + nextComments.length);
     } catch {
-      setLoadError(loadMoreErrorText ?? (isChat ? "Could not load older messages. Please try again." : "Could not load more comments. Please try again."));
+      setLoadError(getLoadErrorText(loadMoreErrorText, variant));
     } finally {
       setLoadingMore(false);
     }
@@ -338,88 +651,55 @@ const Discussion = ({
     setReplyingTo(null);
   };
 
-  const moreButton = canLoadMore ? (
-    <button
-      className={`${styles.moreButton} ${olderMessagesPlacement === "start" ? styles.chatMoreButtonStart : ""}`}
-      disabled={loadingMore}
-      type="button"
-      onClick={() => void handleShowMore()}
-    >
-      {loadingMore
-        ? loadingMoreLabel ?? (isChat ? "Loading older messages…" : "Loading comments…")
-        : loadMoreLabel ?? (isChat ? "Load older messages" : "See more comments")}
-    </button>
-  ) : null;
+  const moreButtonLabel = getMoreButtonText(loadingMore, loadingMoreLabel, loadMoreLabel, variant);
 
   const selectedProviderOption = chatProviders.find(({ id }) => id === resolvedChatProvider);
   const selectedModelLabel = selectedProviderOption?.models?.find(
     ({ id }) => id === resolvedChatModel,
   )?.label ?? resolvedChatModel;
   const conversationContent = (
-    <>
-      {showStreamHeading && (
-        <div className={styles.streamHeading}>
-          <strong>{sectionTitle}</strong>
-          <span>
-            {data.totalRootComments ?? commentCount} {variant === "review" ? "reviews" : isChat ? "messages" : "comments"}
-          </span>
-        </div>
-      )}
-
-      <div
-        aria-label={isChat ? "Conversation messages" : undefined}
-        className={`${styles.stream} ${isChat ? styles.chatStream : ""}`.trim()}
-        ref={streamRef}
-        tabIndex={isChat ? 0 : undefined}
-      >
-        {olderMessagesPlacement === "start" && moreButton}
-        {visibleComments.length === 0 ? (
-          <p className={styles.empty}>{emptyMessage ?? (isChat ? "Start a conversation with the assistant." : "No replies yet. Start the conversation.")}</p>
-        ) : (
-          visibleComments.map((comment) => (
-            <CommentThread
-              key={comment.id}
-              comment={comment}
-              authorTypeStyles={data.authorTypeStyles}
-              depth={0}
-              showRating={showRating}
-              allowReplies={allowReplies}
-              allowReactions={allowReactions}
-              variant={variant}
-              renderCommentBody={renderCommentBody}
-              onReply={handleReply}
-              reactionCounts={reactionCounts}
-              selectedReactions={selectedReactions}
-              onReact={handleReact}
-            />
-          ))
-        )}
-        {olderMessagesPlacement === "end" && moreButton}
-        {isChat && typingIndicator && <ChatTypingIndicator label={typingIndicatorLabel} />}
-        {loadError && <p className={styles.error} role="alert">{loadError}</p>}
-      </div>
-
-      {(allowNewComments || (allowReplies && replyingTo != null)) && (
-        <CommentComposer
-          variant={variant}
-          showRating={showRating}
-          allowRatingInput={allowRatingInput}
-          allowAttachments={allowAttachments}
-          allowEmoji={allowEmoji}
-          replyAuthorTypes={[...resolvedReplyAuthorTypes]}
-          newCommentAuthorType={resolvedNewCommentAuthorType}
-          identityFields={identityFields}
-          inputPlaceholder={inputPlaceholder}
-          composerLabel={composerLabel}
-          submitButtonLabel={submitButtonLabel}
-          submittingLabel={submittingLabel}
-          isSubmitting={isSubmitting}
-          replyingTo={replyingTo}
-          onCancelReply={() => setReplyingTo(null)}
-          onSubmit={handleSubmit}
-        />
-      )}
-    </>
+    <DiscussionConversation
+      data={data}
+      variant={variant}
+      isChat={isChat}
+      showStreamHeading={showStreamHeading}
+      sectionTitle={sectionTitle}
+      commentCount={commentCount}
+      olderMessagesPlacement={olderMessagesPlacement}
+      streamRef={streamRef}
+      canLoadMore={canLoadMore}
+      loadingMore={loadingMore}
+      moreButtonLabel={moreButtonLabel}
+      onShowMore={() => void handleShowMore()}
+      visibleComments={visibleComments}
+      emptyMessage={emptyMessage}
+      loadError={loadError}
+      typingIndicator={typingIndicator}
+      typingIndicatorLabel={typingIndicatorLabel}
+      showRating={showRating}
+      allowReplies={allowReplies}
+      allowReactions={allowReactions}
+      renderCommentBody={renderCommentBody}
+      reactionCounts={reactionCounts}
+      selectedReactions={selectedReactions}
+      onReply={handleReply}
+      onReact={handleReact}
+      allowNewComments={allowNewComments}
+      allowAttachments={allowAttachments}
+      allowEmoji={allowEmoji}
+      allowRatingInput={allowRatingInput}
+      replyAuthorTypes={[...resolvedReplyAuthorTypes]}
+      newCommentAuthorType={resolvedNewCommentAuthorType}
+      identityFields={identityFields}
+      inputPlaceholder={inputPlaceholder}
+      composerLabel={composerLabel}
+      submitButtonLabel={submitButtonLabel}
+      submittingLabel={submittingLabel}
+      isSubmitting={isSubmitting}
+      replyingTo={replyingTo}
+      onCancelReply={() => setReplyingTo(null)}
+      onSubmit={handleSubmit}
+    />
   );
 
   const chatProviderControls = hasChatProviderControls ? (
@@ -443,67 +723,26 @@ const Discussion = ({
 
   return (
     <section
-      aria-label={variant === "review" ? "Product reviews" : isChat ? "Chat conversation" : "Issue discussion"}
-      className={`${styles.root} ${isChat ? styles.chatRoot : ""}`.trim()}
+      aria-label={getSectionLabel(variant)}
+      className={[styles.root, isChat ? styles.chatRoot : ""].filter(Boolean).join(" ")}
     >
       {showHeader && <DiscussionHeader data={data} variant={variant} />}
 
       {isChat ? (
         <div className={`${styles.chatWorkspace} ${hasChatProviderControls ? styles.chatWorkspaceWithSettings : ""}`}>
           {hasChatProviderControls && (
-            <>
-              {chatSettingsOpen && (
-                <button
-                  aria-label="Close AI model settings"
-                  className={styles.chatSettingsScrim}
-                  type="button"
-                  onClick={() => setChatSettingsOpen(false)}
-                />
-              )}
-              <aside
-                aria-labelledby={`${chatSettingsId}-title`}
-                aria-modal={chatSettingsOpen ? "true" : undefined}
-                className={`${styles.chatSettingsPanel} ${chatSettingsOpen ? styles.chatSettingsPanelOpen : ""}`.trim()}
-                id={`${chatSettingsId}-panel`}
-                ref={chatSettingsPanelRef}
-                role={chatSettingsOpen ? "dialog" : "complementary"}
-                tabIndex={-1}
-              >
-                <div className={styles.chatSettingsHeading}>
-                  <div>
-                    <span className={styles.chatSettingsEyebrow}>MODEL CONFIGURATION</span>
-                    <h2 id={`${chatSettingsId}-title`}>AI model</h2>
-                    <p>Choose the provider and model for this conversation.</p>
-                  </div>
-                  <button
-                    aria-label="Close AI model settings"
-                    className={styles.chatSettingsClose}
-                    type="button"
-                    onClick={() => setChatSettingsOpen(false)}
-                  >
-                    <span aria-hidden="true">×</span>
-                  </button>
-                </div>
-                {chatProviderControls}
-              </aside>
-              <button
-                aria-controls={`${chatSettingsId}-panel`}
-                aria-expanded={chatSettingsOpen}
-                aria-haspopup="dialog"
-                aria-label={`Change AI model. ${selectedProviderOption?.label ?? "Choose provider"}${selectedModelLabel ? `, ${selectedModelLabel}` : ""}`}
-                className={styles.chatSettingsTrigger}
-                ref={chatSettingsTriggerRef}
-                type="button"
-                onClick={() => setChatSettingsOpen(true)}
-              >
-                <span className={styles.chatSettingsTriggerCopy}>
-                  <span className={styles.chatSettingsTriggerLabel}>AI model</span>
-                  <strong>{selectedProviderOption?.label ?? "Choose provider"}</strong>
-                  {selectedModelLabel && <span className={styles.chatSettingsTriggerModel}>{selectedModelLabel}</span>}
-                </span>
-                <span className={styles.chatSettingsTriggerAction}>Change</span>
-              </button>
-            </>
+            <ChatModelSettings
+              id={`${chatSettingsId}-panel`}
+              titleId={`${chatSettingsId}-title`}
+              panelRef={chatSettingsPanelRef}
+              triggerRef={chatSettingsTriggerRef}
+              open={chatSettingsOpen}
+              providerLabel={selectedProviderOption?.label ?? "Choose provider"}
+              modelLabel={selectedModelLabel ?? ""}
+              controls={chatProviderControls}
+              onOpen={() => setChatSettingsOpen(true)}
+              onClose={() => setChatSettingsOpen(false)}
+            />
           )}
           <div className={styles.chatConversation}>{conversationContent}</div>
         </div>

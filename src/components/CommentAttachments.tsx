@@ -2,6 +2,14 @@ import type { JSX } from "react";
 import type { ThreadCraftAttachmentInput } from "../types";
 import styles from "./CommentAttachments.module.scss";
 
+const IMAGE_EXTENSIONS = new Set(["avif", "gif", "jpeg", "jpg", "png", "webp"]);
+
+const hasImageExtension = (value: string): boolean => {
+  const path = value.split(/[?#]/, 1)[0] ?? "";
+  const extension = path.split(".").at(-1)?.toLowerCase() ?? "";
+  return IMAGE_EXTENSIONS.has(extension);
+};
+
 interface CommentAttachmentsProps {
   attachments?: ThreadCraftAttachmentInput[];
 }
@@ -11,7 +19,7 @@ const getAttachment = (attachment: ThreadCraftAttachmentInput, index: number) =>
     return {
       name: `Attachment ${index + 1}`,
       url: attachment,
-      isImage: /\.(?:avif|gif|jpe?g|png|webp)(?:[?#].*)?$/i.test(attachment),
+      isImage: hasImageExtension(attachment),
     };
   }
   return {

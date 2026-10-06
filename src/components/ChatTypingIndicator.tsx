@@ -6,10 +6,10 @@ interface ChatTypingIndicatorProps {
 }
 
 const ChatTypingIndicator = ({ label = "AI assistant is thinking" }: ChatTypingIndicatorProps): JSX.Element => (
-  <div aria-label={label} className={styles.indicator} role="status">
+  <output aria-label={label} className={styles.indicator}>
     <span aria-hidden="true" className={styles.dots}><i /><i /><i /></span>
     <span>{label}</span>
-  </div>
+  </output>
 );
 
 export default ChatTypingIndicator;

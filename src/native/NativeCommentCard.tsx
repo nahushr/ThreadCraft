@@ -12,6 +12,14 @@ import { formatDate, getInitials } from "../utils/formatDate";
 import { normalizeReactions, REACTION_EMOJIS } from "../utils/reactions";
 import { nativeStyles as styles } from "./styles";
 
+const IMAGE_EXTENSIONS = new Set(["avif", "gif", "jpeg", "jpg", "png", "webp"]);
+
+const hasImageExtension = (value: string): boolean => {
+  const path = value.split(/[?#]/, 1)[0] ?? "";
+  const extension = path.split(".").at(-1)?.toLowerCase() ?? "";
+  return IMAGE_EXTENSIONS.has(extension);
+};
+
 interface NativeCommentCardProps {
   comment: ThreadCraftComment;
   authorTypeStyles?: Record<string, ThreadCraftAuthorTypeStyle>;
@@ -51,7 +59,7 @@ const NativeCommentCard = ({
 }: NativeCommentCardProps): JSX.Element => {
   const roleStyle = findAuthorStyle(comment.authorType, authorTypeStyles);
   const commentKey = String(comment.id);
-  const reactions = { ...normalizeReactions(comment.reactions), ...(reactionCounts[commentKey] || {}) };
+  const reactions = { ...normalizeReactions(comment.reactions), ...reactionCounts[commentKey] };
   const selected = selectedReactions[commentKey] || [];
   const rating = comment.rating ?? comment.ratings;
   const isChatUser = variant === "chat" && (
@@ -131,7 +139,7 @@ const NativeCommentCard = ({
                 ? { name: `Attachment ${index + 1}`, url: attachment, mimeType: "" }
                 : attachment;
               const uri = file.url || file.dataUrl;
-              const isImage = Boolean(file.mimeType?.startsWith("image/")) || /\.(?:avif|gif|jpe?g|png|webp)(?:[?#].*)?$/i.test(uri || "");
+              const isImage = Boolean(file.mimeType?.startsWith("image/")) || hasImageExtension(uri || "");
               return (
                 <Pressable
                   accessibilityRole="link"
