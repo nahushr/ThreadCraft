@@ -1,6 +1,6 @@
 {
   "name": "@simplishelf/threadcraft",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Nested comments, GitHub issue discussions, and product review threads for React.",
   "license": "MIT",
   "repository": {
