@@ -61,7 +61,7 @@ const Discussion = ({
   allowReplies = true,
   allowNewComments = true,
   allowAttachments = true,
-  allowReactions = true,
+  allowReactions: allowReactionsProp,
   showRating: showRatingProp,
   allowRatingInput: allowRatingInputProp,
   replyAuthorTypes,
@@ -78,7 +78,7 @@ const Discussion = ({
   composerLabel,
   submitButtonLabel,
   submittingLabel,
-  allowEmoji = true,
+  allowEmoji: allowEmojiProp,
   typingIndicator = false,
   typingIndicatorLabel,
   isSubmitting = false,
@@ -90,6 +90,8 @@ const Discussion = ({
 }: ThreadCraftDiscussionProps): JSX.Element => {
   const variant = requestedVariant || data.kind || "issue";
   const isChat = variant === "chat";
+  const allowReactions = allowReactionsProp ?? !isChat;
+  const allowEmoji = allowEmojiProp ?? !isChat;
   const olderMessagesPlacement = loadMorePlacement ?? (isChat ? "start" : "end");
   const pageSize = Math.max(1, loadMoreCount || initialRootLimit || 50);
   const initialLimit = Math.max(1, initialRootLimit || 50);
@@ -300,7 +302,12 @@ const Discussion = ({
         </div>
       )}
 
-      <div className={`${styles.stream} ${isChat ? styles.chatStream : ""}`.trim()} ref={streamRef}>
+      <div
+        aria-label={isChat ? "Conversation messages" : undefined}
+        className={`${styles.stream} ${isChat ? styles.chatStream : ""}`.trim()}
+        ref={streamRef}
+        tabIndex={isChat ? 0 : undefined}
+      >
         {olderMessagesPlacement === "start" && moreButton}
         {visibleComments.length === 0 ? (
           <p className={styles.empty}>{emptyMessage ?? (isChat ? "Start a conversation with the assistant." : "No replies yet. Start the conversation.")}</p>

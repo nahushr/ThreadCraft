@@ -89,7 +89,7 @@ const CommentThread = ({
         {depth > 0 && comment.quotedAuthor && (
           <span className={styles.parentLabel}>↳ {comment.quotedAuthor}</span>
         )}
-        <time className={styles.timestamp}>{formatDate(comment.createdAt)}</time>
+        {variant !== "chat" && <time className={styles.timestamp}>{formatDate(comment.createdAt)}</time>}
       </div>
 
       <div className={bubbleClassName} style={cardStyle}>
@@ -106,6 +106,11 @@ const CommentThread = ({
           </div>
         )}
         <CommentAttachments attachments={comment.attachments} />
+        {variant === "chat" && (
+          <time className={`${styles.timestamp} ${styles.chatTimestamp}`}>
+            {formatDate(comment.createdAt)}
+          </time>
+        )}
 
         {(allowReplies || allowReactions) && (
           <div className={styles.actions}>

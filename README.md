@@ -113,7 +113,7 @@ The native entry uses React Native components and does not require the CSS impor
 | `allowReplies` | `boolean` | `true` | Show reply actions |
 | `allowNewComments` | `boolean` | `true` | Show the root-level composer |
 | `allowAttachments` | `boolean` | `true` | Show attachments; native apps provide `onPickAttachments` |
-| `allowReactions` | `boolean` | `true` | Show reaction actions |
+| `allowReactions` | `boolean` | `false` for chat; `true` otherwise | Show reaction actions |
 | `showStreamHeading` | `boolean` | `true` | Show the discussion, review, or message count heading |
 | `loadMorePlacement` | `"start" \| "end"` | `"start"` for chat, `"end"` otherwise | Place a loaded page before or after the current roots |
 | `loadMoreLabel` | `string` | Variant-specific | Idle pagination button text |
@@ -124,7 +124,7 @@ The native entry uses React Native components and does not require the CSS impor
 | `composerLabel` | `string` | Variant-specific | Accessible composer label |
 | `submitButtonLabel` | `string` | Variant-specific | Composer submit button text |
 | `submittingLabel` | `string` | Variant-specific | Composer submit loading text |
-| `allowEmoji` | `boolean` | `true` | Show the emoji picker |
+| `allowEmoji` | `boolean` | `false` for chat; `true` otherwise | Show the emoji picker |
 | `typingIndicator` | `boolean` | `false` | Show a chat assistant typing indicator |
 | `typingIndicatorLabel` | `string` | `"AI assistant is thinking"` | Accessible typing indicator label |
 | `isSubmitting` | `boolean` | `false` | Disable the composer while the host app processes a message |
@@ -179,7 +179,7 @@ For chat, `comments` are displayed oldest to newest. Set `hasMore` when older me
 | `cardColor` | `string` | Per-comment card background override |
 | `cardBorderColor` | `string` | Per-comment card border override |
 | `cardTextColor` | `string` | Per-comment card text override |
-| `createdAt` | `string` | Comment timestamp |
+| `createdAt` | `string` | Comment timestamp; displayed inside chat bubbles in chat mode |
 | `parentId` | `string \| number \| null` | Flat reply parent; `null` marks a root |
 | `quotedCommentId` | `string \| number \| null` | Alternative flat reply parent |
 | `quotedText` | `string` | Quoted parent text |

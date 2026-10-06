@@ -102,6 +102,7 @@ export default function App() {
       loadMoreLabel="Load older messages"
       allowReplies={false}
       allowReactions={false}
+      allowEmoji={false}
       allowAttachments={false}
       controlledComments
       typingIndicator={chatSubmitting}
@@ -170,7 +171,7 @@ export default function App() {
         )}
         <section
           aria-label={previewMode === "phone" ? "Phone-sized conversation preview" : undefined}
-          className={`demo-panel ${previewMode === "phone" ? "demo-panel--phone" : ""}`}
+          className={`demo-panel ${mode === "chat" ? "demo-panel--chat" : ""} ${previewMode === "phone" ? "demo-panel--phone" : ""}`.trim()}
         >
           {discussion}
         </section>

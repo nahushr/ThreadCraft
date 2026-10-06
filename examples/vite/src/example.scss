@@ -43,11 +43,13 @@ button { font: inherit; }
 .demo-device-icon--phone::after { position: absolute; bottom: 1px; left: 3px; width: 2px; height: 1px; border-radius: 2px; background: currentColor; content: ""; }
 .demo-preview { width: 100%; }
 .demo-panel { margin-top: 16px; padding: 20px; border: 1px solid #e4e7ec; border-radius: 16px; background: #fff; }
+.demo-panel--chat { height: clamp(360px, 68vh, 620px); min-height: 0; padding: 0; overflow: hidden; }
 .demo-preview--phone { position: relative; width: min(406px, 100%); height: min(780px, 76vh); min-height: 520px; margin: 18px auto 0; padding: 34px 7px 20px; overflow: hidden; border: 1px solid #cbd0da; border-radius: 44px; background: linear-gradient(145deg, #202a3a, #111827); box-shadow: 0 24px 54px rgb(16 24 40 / 16%), 0 4px 12px rgb(16 24 40 / 10%), inset 0 1px 1px rgb(255 255 255 / 24%); }
 .demo-phone-status { position: absolute; z-index: 1; top: 8px; right: 23px; left: 23px; display: flex; align-items: center; height: 18px; color: #fff; font-size: 9px; font-weight: 750; pointer-events: none; }
 .demo-phone-notch { position: absolute; top: -8px; left: 50%; width: 78px; height: 21px; transform: translateX(-50%); border-radius: 0 0 12px 12px; background: #07090d; }
 .demo-phone-status__icons { margin-left: auto; letter-spacing: 1px; }
 .demo-panel--phone { width: 100%; height: 100%; min-height: 0; margin: 0; padding: 12px 10px 10px; overflow: auto; overscroll-behavior: contain; border: 0; border-radius: 30px; background: #fff; scrollbar-width: thin; scrollbar-color: #d0d5dd transparent; }
+.demo-panel--chat.demo-panel--phone { height: 100%; min-height: 0; overflow: hidden; }
 .demo-phone-home { position: absolute; bottom: 7px; left: 50%; width: 78px; height: 4px; transform: translateX(-50%); border-radius: 99px; background: #fff; opacity: .82; pointer-events: none; }
 .demo-footer { margin-top: 16px; color: #667085; font-size: 12px; text-align: center; }
 .demo-footer code { padding: 2px 5px; border-radius: 4px; color: #344054; background: #eaecf0; }

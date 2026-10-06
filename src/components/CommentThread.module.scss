@@ -5,7 +5,6 @@
 .chatMessageAssistant { align-items: flex-start; margin-right: auto; }
 .chatHeading { width: 100%; }
 .chatMessageUser .chatHeading { justify-content: flex-end; }
-.chatMessageUser .timestamp { width: auto; margin-left: 5px; }
 .bubbleChatUser,
 .bubbleChatAssistant { max-width: min(760px, 84%); }
 .bubbleChatUser { border: 1px solid var(--tc-comment-card-border, #294ec5); border-radius: 18px 18px 5px 18px; color: #fff; background: var(--tc-comment-card-background, linear-gradient(145deg, #315efb, #2449cb)); }
@@ -78,6 +77,8 @@
 
 .parentLabel { color: #98a2b3; font-size: 10px; }
 .timestamp { margin-left: auto; color: #98a2b3; font-size: 10px; }
+.chatTimestamp { display: block; width: 100%; margin: 6px 0 0; text-align: right; }
+.bubbleChatUser .chatTimestamp { color: rgb(255 255 255 / 76%); }
 
 .bubble {
   width: fit-content;
@@ -150,5 +151,4 @@
   .timestamp { width: 100%; margin-left: 39px; }
   .bubbleChatUser,
   .bubbleChatAssistant { max-width: min(100%, 88%); }
-  .chatMessageUser .timestamp { width: auto; margin-left: 5px; }
 }

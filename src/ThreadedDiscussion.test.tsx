@@ -8,6 +8,33 @@ import type { ThreadCraftComment, ThreadCraftData } from "./types";
 afterEach(cleanup);
 
 describe("ThreadedDiscussion examples", () => {
+  it("keeps chat timestamps inside each bubble and hides emoji controls by default", () => {
+    const data: ThreadCraftData = {
+      kind: "chat",
+      title: "AI assistant",
+      comments: [
+        { id: "user", author: "Alex Morgan", authorType: "user", text: "Can you summarize this?", createdAt: "2026-10-05T13:20:00.000Z" },
+        { id: "assistant", author: "AI Assistant", authorType: "assistant", text: "Here is the summary.", createdAt: "2026-10-05T13:20:08.000Z" },
+      ],
+    };
+    const { container } = render(
+      <ChatThread
+        data={data}
+        showHeader={false}
+        showStreamHeading={false}
+        allowReplies={false}
+      />,
+    );
+
+    expect(screen.queryByLabelText("Add emoji")).toBeNull();
+    expect(screen.queryByLabelText("Reactions")).toBeNull();
+    const timestamps = Array.from(container.querySelectorAll("time"));
+    expect(timestamps).toHaveLength(2);
+    timestamps.forEach((timestamp) => {
+      expect(timestamp.parentElement?.className).toContain("bubble");
+    });
+  });
+
   it("hides author role chips in AI chat while retaining author names", () => {
     const data: ThreadCraftData = {
       kind: "chat",
