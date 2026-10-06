@@ -111,6 +111,30 @@ export interface ThreadCraftSubmitPayload {
   authorEmail?: string;
   /** Selected reply identity; issue replies use support/customer, reviews use customer/business. */
   authorType?: ThreadCraftReplyAuthorType;
+  /** Selected chat provider; included in chat submissions when provider controls are enabled. */
+  chatProvider?: string;
+  /** Selected chat model; included in chat submissions when provider controls are enabled. */
+  chatModel?: string;
+}
+
+export interface ThreadCraftChatModel {
+  id: string;
+  label?: string;
+}
+
+export interface ThreadCraftChatProviderOption {
+  id: string;
+  label: string;
+  /** Optional host-provided key. Never included in ThreadCraftSubmitPayload. */
+  apiKey?: string;
+  /** Models supplied by the host, for example from its own model-list endpoint. */
+  models?: ThreadCraftChatModel[];
+}
+
+export interface ThreadCraftLoadChatModelsRequest {
+  provider: string;
+  /** May be omitted when a host loads models through its own authenticated backend. */
+  apiKey?: string;
 }
 
 export interface ThreadCraftDiscussionProps {
@@ -148,6 +172,24 @@ export interface ThreadCraftDiscussionProps {
   isSubmitting?: boolean;
   /** Sync changed data.comments props into the rendered message list. */
   controlledComments?: boolean;
+  /** Render provider and model selectors above the chat stream. Opt-in, chat variant only. */
+  showChatProviderControls?: boolean;
+  /** Provider choices and optional preloaded models/API keys for chat controls. */
+  chatProviders?: ThreadCraftChatProviderOption[];
+  /** Show a password input for the active provider key. Defaults to true when controls are enabled. */
+  showChatApiKeyInput?: boolean;
+  /** Controlled provider selection. */
+  selectedChatProvider?: string;
+  /** Controlled model selection. */
+  selectedChatModel?: string;
+  onChatProviderChange?: (provider: string) => void;
+  onChatModelChange?: (model: string) => void;
+  /** Called as the user types; keys remain in host/component memory and are not persisted by the package. */
+  onChatApiKeyChange?: (provider: string, apiKey: string) => void;
+  /** Load available models for the selected provider. */
+  onLoadChatModels?: (
+    request: ThreadCraftLoadChatModelsRequest,
+  ) => Promise<ThreadCraftChatModel[]>;
   /** Render comment content with an app-specific safe Markdown renderer when needed. */
   renderCommentBody?: (comment: ThreadCraftComment) => ReactNode;
   /** Show stars on review comments; independent of whether the composer collects a rating. */

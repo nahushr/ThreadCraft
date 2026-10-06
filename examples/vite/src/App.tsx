@@ -4,8 +4,9 @@ import type { ThreadCraftComment, ThreadCraftData, ThreadCraftLoadMoreRequest, T
 import issueFixture from "./test-data/github-issue.json";
 import reviewFixture from "./test-data/reviews.json";
 import aiChatFixture from "./test-data/ai-chat.json";
-import aiChatReplyFixture from "./test-data/ai-chat-reply.json";
 import { fetchMoreAiMessages, fetchMoreIssueComments, fetchMoreReviews } from "./mockApi";
+import { generateProviderReply, loadProviderModels } from "./aiProviderApi";
+import type { ExampleAiProvider } from "./aiProviderApi";
 
 type ExampleMode = "issue" | "review" | "chat";
 type PreviewMode = "desktop" | "phone";
@@ -14,7 +15,6 @@ const FIRST_PAGE_SIZE = 50;
 const issueFixtureData = issueFixture as ThreadCraftData;
 const reviewFixtureData = reviewFixture as ThreadCraftData;
 const aiChatFixtureData = aiChatFixture as ThreadCraftData;
-const aiChatReply = aiChatReplyFixture as ThreadCraftComment;
 const issueData: ThreadCraftData = {
   ...issueFixtureData,
   comments: issueFixtureData.comments.slice(0, FIRST_PAGE_SIZE),
@@ -34,6 +34,13 @@ export default function App() {
   const [chatMessages, setChatMessages] = useState<ThreadCraftComment[]>(aiChatFixtureData.comments);
   const [chatHasMore, setChatHasMore] = useState(aiChatFixtureData.hasMore ?? false);
   const [chatSubmitting, setChatSubmitting] = useState(false);
+  const [chatProvider, setChatProvider] = useState<ExampleAiProvider>("gemini");
+  const [chatModel, setChatModel] = useState("");
+  const [chatApiKeys, setChatApiKeys] = useState<Record<ExampleAiProvider, string>>({ gemini: "", groq: "" });
+  const chatProviders = [
+    { id: "gemini", label: "Google Gemini", apiKey: chatApiKeys.gemini },
+    { id: "groq", label: "Groq", apiKey: chatApiKeys.groq },
+  ];
   const chatData = useMemo<ThreadCraftData>(() => ({
     ...aiChatFixtureData,
     comments: chatMessages,
@@ -45,6 +52,9 @@ export default function App() {
   };
   const onSubmitChat = async (payload: ThreadCraftSubmitPayload): Promise<void> => {
     const submittedAt = Date.now();
+    const provider = (payload.chatProvider ?? chatProvider) as ExampleAiProvider;
+    const model = payload.chatModel ?? chatModel;
+    const apiKey = chatApiKeys[provider];
     setChatSubmitting(true);
     setChatMessages((current) => [...current, {
       id: `demo-user-${submittedAt}`,
@@ -54,13 +64,33 @@ export default function App() {
       text: payload.text,
       createdAt: new Date(submittedAt).toISOString(),
     }]);
-    await new Promise((resolve) => window.setTimeout(resolve, 550));
-    setChatMessages((current) => [...current, {
-      ...aiChatReply,
-      id: `demo-assistant-${submittedAt}`,
-      createdAt: new Date().toISOString(),
-    }]);
-    setChatSubmitting(false);
+    try {
+      const history = [
+        ...chatMessages.map((message): { role: "user" | "assistant"; content: string } => ({
+          role: message.isMine || message.authorType === "user" ? "user" : "assistant",
+          content: message.text ?? message.body ?? "",
+        })),
+        { role: "user" as const, content: payload.text },
+      ];
+      const response = await generateProviderReply(provider, model, apiKey, history);
+      setChatMessages((current) => [...current, {
+        id: `demo-assistant-${submittedAt}`,
+        author: "AI Assistant",
+        authorType: "assistant",
+        text: response,
+        createdAt: new Date().toISOString(),
+      }]);
+    } catch (error) {
+      setChatMessages((current) => [...current, {
+        id: `demo-assistant-error-${submittedAt}`,
+        author: "AI Assistant",
+        authorType: "assistant",
+        text: error instanceof Error ? error.message : "Could not get a response from the selected provider.",
+        createdAt: new Date().toISOString(),
+      }]);
+    } finally {
+      setChatSubmitting(false);
+    }
   };
   const onLoadOlderChatMessages = async (
     request: ThreadCraftLoadMoreRequest,
@@ -105,6 +135,19 @@ export default function App() {
       allowEmoji={false}
       allowAttachments={false}
       controlledComments
+      showChatProviderControls
+      chatProviders={chatProviders}
+      showChatApiKeyInput
+      selectedChatProvider={chatProvider}
+      selectedChatModel={chatModel}
+      onChatProviderChange={(provider) => setChatProvider(provider as ExampleAiProvider)}
+      onChatModelChange={setChatModel}
+      onChatApiKeyChange={(provider, apiKey) => {
+        if (provider === "gemini" || provider === "groq") {
+          setChatApiKeys((current) => ({ ...current, [provider]: apiKey }));
+        }
+      }}
+      onLoadChatModels={({ provider, apiKey }) => loadProviderModels(provider as ExampleAiProvider, apiKey ?? "")}
       typingIndicator={chatSubmitting}
       onLoadMore={onLoadOlderChatMessages}
       onSubmitComment={onSubmitChat}
@@ -178,7 +221,7 @@ export default function App() {
         {previewMode === "phone" && <div className="demo-phone-home" aria-hidden="true" />}
       </div>
 
-      <footer className="demo-footer">Conversation fixtures are checked-in JSON; comment and history pages use delayed mock requests.</footer>
+      <footer className="demo-footer">Issue and review fixtures are checked-in JSON with delayed mock pagination. AI chat uses your selected Gemini or Groq key in this browser session.</footer>
     </main>
   );
 }

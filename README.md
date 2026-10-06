@@ -23,7 +23,7 @@
 |---|---|---|
 | GitHub issue | [github-issue.json](examples/vite/src/test-data/github-issue.json) | Nested replies, reactions, attachments, async “See more” |
 | Product review | [reviews.json](examples/vite/src/test-data/reviews.json) | Ratings, business replies, async “See more” |
-| AI chat | [ai-chat.json](examples/vite/src/test-data/ai-chat.json) | Chronological messages, top-paged history, typing state |
+| AI chat | [ai-chat.json](examples/vite/src/test-data/ai-chat.json) | Provider/model selectors, Gemini and Groq key entry, live replies, top-paged history |
 
 ## Install and import
 
@@ -73,6 +73,34 @@ export function DiscussionExample() {
 }
 ```
 
+### AI provider controls
+
+Provider and model selectors are opt-in for `ChatThread`. A host can preconfigure credentials and hide the key field while keeping both selectors visible:
+
+```tsx
+import type { ThreadCraftChatProviderOption } from "@simplishelf/threadcraft";
+
+const chatProviders: ThreadCraftChatProviderOption[] = [
+  { id: "gemini", label: "Gemini", apiKey: credentials.gemini },
+  { id: "groq", label: "Groq", apiKey: credentials.groq },
+];
+
+<ChatThread
+  data={chatData}
+  showChatProviderControls
+  chatProviders={chatProviders}
+  showChatApiKeyInput={false}
+  onLoadChatModels={({ provider }) => loadModelsFromYourBackend(provider)}
+  onSubmitComment={(payload) => sendMessage({
+    text: payload.text,
+    provider: payload.chatProvider,
+    model: payload.chatModel,
+  })}
+/>
+```
+
+To let demo users provide their own key, set `showChatApiKeyInput` to `true` and handle `onChatApiKeyChange`. Keys are not persisted or included in `ThreadCraftSubmitPayload`. The Vite demo sends chat requests to the selected provider from the browser; production apps can load models and submit messages through their own backend.
+
 ### React Native / Expo
 
 ```tsx
@@ -97,7 +125,7 @@ The native entry uses React Native components and does not require the CSS impor
 |---|---|---|
 | GitHub issue | `GitHubIssueThread` | `kind: "issue"`; optional issue status, URL, author, and body |
 | Product review | `ReviewThread` | `kind: "review"`; set `showRating: true` to display review stars; use `allowRatingInput` to control rating entry |
-| AI chat | `ChatThread` | `kind: "chat"`; set `controlledComments` for parent-owned messages; `onLoadMore` prepends older messages and `typingIndicator` shows assistant activity |
+| AI chat | `ChatThread` | `kind: "chat"`; optionally enable provider/model controls with `showChatProviderControls`, `chatProviders`, and `onLoadChatModels`; `onSubmitComment` receives the selected provider and model |
 | Dynamic variant | `ThreadedDiscussion` | Optional `variant`; defaults to `data.kind`, then `"issue"` |
 
 ## Component options
@@ -129,6 +157,15 @@ The native entry uses React Native components and does not require the CSS impor
 | `typingIndicatorLabel` | `string` | `"AI assistant is thinking"` | Accessible typing indicator label |
 | `isSubmitting` | `boolean` | `false` | Disable the composer while the host app processes a message |
 | `controlledComments` | `boolean` | `false` | Sync parent-owned `data.comments`; recommended for AI chat |
+| `showChatProviderControls` | `boolean` | `false` | Show provider and model controls in chat mode |
+| `chatProviders` | `ThreadCraftChatProviderOption[]` | `[]` | Provider labels, optional API keys, and preloaded models |
+| `showChatApiKeyInput` | `boolean` | `true` | Show a password input while provider controls are enabled; set `false` when the host supplies credentials |
+| `selectedChatProvider` | `string` | First provider | Controlled provider selection |
+| `selectedChatModel` | `string` | First available model | Controlled model selection |
+| `onChatProviderChange` | `(provider: string) => void` | — | Observe provider selection changes |
+| `onChatModelChange` | `(model: string) => void` | — | Observe model selection changes |
+| `onChatApiKeyChange` | `(provider: string, apiKey: string) => void` | — | Receive key input changes; the package does not persist keys |
+| `onLoadChatModels` | `(request: ThreadCraftLoadChatModelsRequest) => Promise<ThreadCraftChatModel[]>` | — | Fetch models for the selected provider; may call a host backend |
 | `renderCommentBody` | `(comment: ThreadCraftComment) => ReactNode` | Plain text | Supply an app renderer, for example sanitized Markdown |
 | `showRating` | `boolean` | `data.showRating` | Display comment ratings in review threads |
 | `allowRatingInput` | `boolean` | `showRating` | Show the root composer rating control |
@@ -440,7 +477,7 @@ Color values accept CSS color formats such as hex, `rgb()`, `hsl()`, and named c
 |---|---|---|
 | `onLoadMore` request | `{ offset: number, limit: number }` | Root-comment offset and page size |
 | `onLoadMore` result | `{ comments: ThreadCraftComment[], hasMore?: boolean }` | Adds unique roots; chat mode prepends older messages |
-| `onSubmitComment` payload | `{ text, parentId?, attachments, rating?, authorType?, authorName?, authorEmail? }` | `parentId` is omitted for a root; configured identity values are included |
+| `onSubmitComment` payload | `{ text, parentId?, attachments, rating?, authorType?, authorName?, authorEmail?, chatProvider?, chatModel? }` | Chat fields are included when provider controls are enabled; API keys are never included |
 | Reply roles | `customer \| business \| support \| user` | Issue: Support/Customer; review: Customer/Business; chat root: User |
 | `onReact` | `(comment, emoji) => void` | Runs after the component toggles the reaction locally |
 
@@ -453,6 +490,8 @@ Color values accept CSS color formats such as hex, `rgb()`, `hsl()`, and named c
 | `authorType` | `"customer" \| "business" \| "support" \| "user"` | Reply or configured root identity |
 | `authorName` | `string` | When the composer includes a name field |
 | `authorEmail` | `string` | When the composer includes an email field |
+| `chatProvider` | `string` | When chat provider controls are enabled |
+| `chatModel` | `string` | When chat provider controls are enabled and a model is selected |
 
 | Built-in image picker | Limit |
 |---|---:|
@@ -468,7 +507,7 @@ Color values accept CSS color formats such as hex, `rgb()`, `hsl()`, and named c
 |---|---|
 | `GitHubIssueThread`, `ReviewThread`, `ChatThread`, `ThreadedDiscussion` | Components |
 | `GitHubIssueThread`, `ReviewThread`, `ChatThread`, `ThreadedDiscussion` from `@simplishelf/threadcraft/native` | React Native components |
-| `ThreadCraftId`, `ThreadCraftVariant`, `ThreadCraftAttachment`, `ThreadCraftAttachmentInput`, `ThreadCraftAuthorTypeStyle`, `ThreadCraftComment`, `ThreadCraftData`, `ThreadCraftDiscussionProps`, `ThreadCraftIdentityField`, `ThreadCraftIdentityFields`, `ThreadCraftLoadMoreRequest`, `ThreadCraftLoadMoreResult`, `ThreadCraftReplyAuthorType`, `ThreadCraftSubmitPayload` | Types |
+| `ThreadCraftId`, `ThreadCraftVariant`, `ThreadCraftAttachment`, `ThreadCraftAttachmentInput`, `ThreadCraftAuthorTypeStyle`, `ThreadCraftChatModel`, `ThreadCraftChatProviderOption`, `ThreadCraftComment`, `ThreadCraftData`, `ThreadCraftDiscussionProps`, `ThreadCraftIdentityField`, `ThreadCraftIdentityFields`, `ThreadCraftLoadChatModelsRequest`, `ThreadCraftLoadMoreRequest`, `ThreadCraftLoadMoreResult`, `ThreadCraftReplyAuthorType`, `ThreadCraftSubmitPayload` | Types |
 | `buildCommentTree`, `appendReplyToTree`, `appendUniqueRootComments`, `prependUniqueRootComments`, `countRootComments` | Helpers |
 
 ## Development

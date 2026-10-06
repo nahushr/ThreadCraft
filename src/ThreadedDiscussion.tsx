@@ -17,6 +17,7 @@ import CommentComposer from "./components/CommentComposer";
 import CommentThread from "./components/CommentThread";
 import DiscussionHeader from "./components/DiscussionHeader";
 import ChatTypingIndicator from "./components/ChatTypingIndicator";
+import ChatProviderControls from "./components/ChatProviderControls";
 import styles from "./ThreadedDiscussion.module.scss";
 
 let fallbackCommentIdSequence = 0;
@@ -83,6 +84,15 @@ const Discussion = ({
   typingIndicatorLabel,
   isSubmitting = false,
   controlledComments = false,
+  showChatProviderControls = false,
+  chatProviders = [],
+  showChatApiKeyInput = true,
+  selectedChatProvider,
+  selectedChatModel,
+  onChatProviderChange,
+  onChatModelChange,
+  onChatApiKeyChange,
+  onLoadChatModels,
   renderCommentBody,
   onLoadMore,
   onSubmitComment,
@@ -112,6 +122,8 @@ const Discussion = ({
   const [loadError, setLoadError] = useState("");
   const [reactionCounts, setReactionCounts] = useState<Record<string, Record<string, number>>>({});
   const [selectedReactions, setSelectedReactions] = useState<Record<string, string[]>>({});
+  const [localChatProvider, setLocalChatProvider] = useState(selectedChatProvider ?? chatProviders[0]?.id ?? "");
+  const [localChatModel, setLocalChatModel] = useState(selectedChatModel ?? "");
   const lastDataKey = useRef(dataKey);
   const lastSyncedData = useRef({ dataKey, comments: data.comments, hasMore: data.hasMore });
   const streamRef = useRef<HTMLDivElement | null>(null);
@@ -126,6 +138,11 @@ const Discussion = ({
       : isChat
         ? [] as const
         : ["support", "customer"] as const;
+  const resolvedChatProvider = chatProviders.some(({ id }) => id === (selectedChatProvider ?? localChatProvider))
+    ? selectedChatProvider ?? localChatProvider
+    : chatProviders[0]?.id ?? "";
+  const resolvedChatModel = selectedChatModel ?? localChatModel;
+  const hasChatProviderControls = isChat && showChatProviderControls && chatProviders.length > 0;
 
   useEffect(() => {
     if (controlledComments) {
@@ -242,7 +259,10 @@ const Discussion = ({
   };
 
   const handleSubmit = async (payload: ThreadCraftSubmitPayload): Promise<void> => {
-    const saved = await onSubmitComment?.(payload);
+    const submitPayload = hasChatProviderControls
+      ? { ...payload, chatProvider: resolvedChatProvider, chatModel: resolvedChatModel || undefined }
+      : payload;
+    const saved = await onSubmitComment?.(submitPayload);
     if (isChat && controlledComments) {
       setReplyingTo(null);
       return;
@@ -292,6 +312,25 @@ const Discussion = ({
       className={`${styles.root} ${isChat ? styles.chatRoot : ""}`.trim()}
     >
       {showHeader && <DiscussionHeader data={data} variant={variant} />}
+
+      {hasChatProviderControls && (
+        <ChatProviderControls
+          providers={chatProviders}
+          showApiKeyInput={showChatApiKeyInput}
+          selectedProvider={resolvedChatProvider}
+          selectedModel={resolvedChatModel}
+          onProviderChange={(provider) => {
+            setLocalChatProvider(provider);
+            onChatProviderChange?.(provider);
+          }}
+          onModelChange={(model) => {
+            setLocalChatModel(model);
+            onChatModelChange?.(model);
+          }}
+          onApiKeyChange={onChatApiKeyChange}
+          onLoadModels={onLoadChatModels}
+        />
+      )}
 
       {showStreamHeading && (
         <div className={styles.streamHeading}>
