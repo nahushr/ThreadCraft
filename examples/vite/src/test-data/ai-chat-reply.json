@@ -1,0 +1,7 @@
+{
+  "id": "demo-assistant-response",
+  "author": "AI Assistant",
+  "authorType": "assistant",
+  "text": "Thanks for the question. This demo uses a checked-in response fixture; connect `onSubmitComment` to your own assistant service to return live answers.",
+  "createdAt": "2026-09-29T14:06:00.000Z"
+}

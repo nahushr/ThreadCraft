@@ -23,6 +23,7 @@
 |---|---|---|
 | GitHub issue | [github-issue.json](examples/vite/src/test-data/github-issue.json) | Nested replies, reactions, attachments, async “See more” |
 | Product review | [reviews.json](examples/vite/src/test-data/reviews.json) | Ratings, business replies, async “See more” |
+| AI chat | [ai-chat.json](examples/vite/src/test-data/ai-chat.json) | Chronological messages, top-paged history, typing state |
 
 ## Install and import
 
@@ -32,6 +33,7 @@ npm install @simplishelf/threadcraft
 
 ```tsx
 import {
+  ChatThread,
   GitHubIssueThread,
   ReviewThread,
   ThreadedDiscussion,
@@ -52,11 +54,19 @@ const reviewData: ThreadCraftData = {
   comments: [],
 };
 
+const chatData: ThreadCraftData = {
+  kind: "chat",
+  title: "AI Assistant",
+  comments: [],
+  hasMore: true,
+};
+
 export function DiscussionExample() {
   return (
     <>
       <GitHubIssueThread data={issueData} />
       <ReviewThread data={reviewData} />
+      <ChatThread data={chatData} />
       <ThreadedDiscussion data={issueData} variant="issue" />
     </>
   );
@@ -87,6 +97,7 @@ The native entry uses React Native components and does not require the CSS impor
 |---|---|---|
 | GitHub issue | `GitHubIssueThread` | `kind: "issue"`; optional issue status, URL, author, and body |
 | Product review | `ReviewThread` | `kind: "review"`; set `showRating: true` to display review stars; use `allowRatingInput` to control rating entry |
+| AI chat | `ChatThread` | `kind: "chat"`; set `controlledComments` for parent-owned messages; `onLoadMore` prepends older messages and `typingIndicator` shows assistant activity |
 | Dynamic variant | `ThreadedDiscussion` | Optional `variant`; defaults to `data.kind`, then `"issue"` |
 
 ## Component options
@@ -94,23 +105,39 @@ The native entry uses React Native components and does not require the CSS impor
 | Prop | Type | Default | Description |
 |---|---|---|---|
 | `data` | `ThreadCraftData` | Required | Metadata and initial comments |
-| `variant` | `"issue" \| "review"` | `data.kind ?? "issue"` | Used by `ThreadedDiscussion`; wrapper components select their own variant |
+| `variant` | `"issue" \| "review" \| "chat"` | `data.kind ?? "issue"` | Used by `ThreadedDiscussion`; wrapper components select their own variant |
 | `currentUser` | `string` | `"You"` | Author for locally created comments |
-| `showHeader` | `boolean` | `true` | Show the issue/review metadata card |
+| `showHeader` | `boolean` | `true` | Show the issue, product, or chat header |
 | `initialRootLimit` | `number` | `50` | Root comments shown first; their nested replies remain visible |
 | `loadMoreCount` | `number` | `initialRootLimit` or `50` | Root comments revealed or requested per “See more” |
 | `allowReplies` | `boolean` | `true` | Show reply actions |
 | `allowNewComments` | `boolean` | `true` | Show the root-level composer |
 | `allowAttachments` | `boolean` | `true` | Show attachments; native apps provide `onPickAttachments` |
 | `allowReactions` | `boolean` | `true` | Show reaction actions |
+| `showStreamHeading` | `boolean` | `true` | Show the discussion, review, or message count heading |
+| `loadMorePlacement` | `"start" \| "end"` | `"start"` for chat, `"end"` otherwise | Place a loaded page before or after the current roots |
+| `loadMoreLabel` | `string` | Variant-specific | Idle pagination button text |
+| `loadingMoreLabel` | `string` | Variant-specific | Pagination loading text |
+| `loadMoreErrorText` | `string` | Variant-specific | Error shown when a page request rejects |
+| `emptyMessage` | `string` | Variant-specific | Text shown when the discussion has no comments |
+| `inputPlaceholder` | `string` | Variant-specific | Composer placeholder |
+| `composerLabel` | `string` | Variant-specific | Accessible composer label |
+| `submitButtonLabel` | `string` | Variant-specific | Composer submit button text |
+| `submittingLabel` | `string` | Variant-specific | Composer submit loading text |
+| `allowEmoji` | `boolean` | `true` | Show the emoji picker |
+| `typingIndicator` | `boolean` | `false` | Show a chat assistant typing indicator |
+| `typingIndicatorLabel` | `string` | `"AI assistant is thinking"` | Accessible typing indicator label |
+| `isSubmitting` | `boolean` | `false` | Disable the composer while the host app processes a message |
+| `controlledComments` | `boolean` | `false` | Sync parent-owned `data.comments`; recommended for AI chat |
+| `renderCommentBody` | `(comment: ThreadCraftComment) => ReactNode` | Plain text | Supply an app renderer, for example sanitized Markdown |
 | `showRating` | `boolean` | `data.showRating` | Display comment ratings in review threads |
 | `allowRatingInput` | `boolean` | `showRating` | Show the root composer rating control |
 | `replyAuthorTypes` | `ThreadCraftReplyAuthorType[]` | Issue/review defaults | Allowed reply identities; a one-item list fixes the identity |
-| `newCommentAuthorType` | `ThreadCraftReplyAuthorType` | `customer` for reviews, `support` for issues | Identity on root submissions |
+| `newCommentAuthorType` | `ThreadCraftReplyAuthorType` | `customer` for reviews, `support` for issues, `user` for chat | Identity on root submissions |
 | `newCommentPosition` | `"start" \| "end"` | `"end"` | Place successful root submissions at the beginning or end |
 | `identityFields` | `ThreadCraftIdentityFields` | — | Configure author name/email fields in the composer |
 | `onPickAttachments` | `() => Promise<ThreadCraftAttachment[]>` | — | Native attachment picker adapter |
-| `onLoadMore` | `(request: ThreadCraftLoadMoreRequest) => Promise<ThreadCraftLoadMoreResult>` | — | Fetch another root-comment page |
+| `onLoadMore` | `(request: ThreadCraftLoadMoreRequest) => Promise<ThreadCraftLoadMoreResult>` | — | Fetch another root-comment page; chat mode places older messages at the top |
 | `onSubmitComment` | `(payload: ThreadCraftSubmitPayload) => Promise<ThreadCraftComment \| void>` | Local update | Persist a comment; return the saved comment or `void` |
 | `onReact` | `(comment: ThreadCraftComment, emoji: string) => void` | — | Observe a locally applied reaction toggle |
 
@@ -121,8 +148,8 @@ The native entry uses React Native components and does not require the CSS impor
 | Field | Type | Required | Meaning |
 |---|---|:---:|---|
 | `id` | `string \| number` | | Discussion identifier |
-| `kind` | `"issue" \| "review"` | | Default component variant |
-| `title` | `string` | ✓ | Issue or product title |
+| `kind` | `"issue" \| "review" \| "chat"` | | Default component variant |
+| `title` | `string` | ✓ | Issue, product, or chat title |
 | `author` | `string` | | Issue opener or store name |
 | `authorAvatarUrl` | `string` | | Header avatar URL |
 | `createdAt` | `string` | | Header timestamp |
@@ -134,6 +161,8 @@ The native entry uses React Native components and does not require the CSS impor
 | `showRating` | `boolean` | | Display rating stars on review comments |
 | `hasMore` | `boolean` | | Whether more root comments are available |
 | `totalRootComments` | `number` | | Total root count shown in the discussion heading |
+
+For chat, `comments` are displayed oldest to newest. Set `hasMore` when older messages are available. The chat pagination control appears at the top and expects `onLoadMore` to return older comments; `controlledComments` keeps the parent as the source of truth.
 
 ### Comment: `ThreadCraftComment`
 
@@ -162,7 +191,7 @@ The native entry uses React Native components and does not require the CSS impor
 | `ratings` | `number` | Legacy rating alias; `rating` takes precedence |
 | `isCustomer` | `boolean` | Legacy customer-author flag |
 | `isMine` | `boolean` | Legacy flag treated as customer-authored |
-| `authorType` | `string` | `customer`, `business`, `support`, `bot`, or custom role |
+| `authorType` | `string` | `customer`, `business`, `support`, `bot`, `user`, `assistant`, or custom role |
 
 ### Composer identity: `ThreadCraftIdentityFields`
 
@@ -410,9 +439,9 @@ Color values accept CSS color formats such as hex, `rgb()`, `hsl()`, and named c
 | API | Shape | Behavior |
 |---|---|---|
 | `onLoadMore` request | `{ offset: number, limit: number }` | Root-comment offset and page size |
-| `onLoadMore` result | `{ comments: ThreadCraftComment[], hasMore?: boolean }` | Appends unique roots; short page implies no more when `hasMore` is omitted |
+| `onLoadMore` result | `{ comments: ThreadCraftComment[], hasMore?: boolean }` | Adds unique roots; chat mode prepends older messages |
 | `onSubmitComment` payload | `{ text, parentId?, attachments, rating?, authorType?, authorName?, authorEmail? }` | `parentId` is omitted for a root; configured identity values are included |
-| Reply roles | `customer \| business \| support` | Issue: Support/Customer; review: Customer/Business |
+| Reply roles | `customer \| business \| support \| user` | Issue: Support/Customer; review: Customer/Business; chat root: User |
 | `onReact` | `(comment, emoji) => void` | Runs after the component toggles the reaction locally |
 
 | Submit payload field | Type | Included when |
@@ -421,7 +450,7 @@ Color values accept CSS color formats such as hex, `rgb()`, `hsl()`, and named c
 | `parentId` | `string \| number` | Reply |
 | `attachments` | `ThreadCraftAttachment[]` | Every submission; empty when none selected |
 | `rating` | `number` | Root review when rating input is enabled |
-| `authorType` | `"customer" \| "business" \| "support"` | Reply or configured root identity |
+| `authorType` | `"customer" \| "business" \| "support" \| "user"` | Reply or configured root identity |
 | `authorName` | `string` | When the composer includes a name field |
 | `authorEmail` | `string` | When the composer includes an email field |
 
@@ -437,10 +466,10 @@ Color values accept CSS color formats such as hex, `rgb()`, `hsl()`, and named c
 
 | Export | Kind |
 |---|---|
-| `GitHubIssueThread`, `ReviewThread`, `ThreadedDiscussion` | Components |
-| `GitHubIssueThread`, `ReviewThread`, `ThreadedDiscussion` from `@simplishelf/threadcraft/native` | React Native components |
-| `ThreadCraftId`, `ThreadCraftAttachment`, `ThreadCraftAttachmentInput`, `ThreadCraftAuthorTypeStyle`, `ThreadCraftComment`, `ThreadCraftData`, `ThreadCraftDiscussionProps`, `ThreadCraftIdentityField`, `ThreadCraftIdentityFields`, `ThreadCraftLoadMoreRequest`, `ThreadCraftLoadMoreResult`, `ThreadCraftReplyAuthorType`, `ThreadCraftSubmitPayload` | Types |
-| `buildCommentTree`, `appendReplyToTree`, `appendUniqueRootComments`, `countRootComments` | Helpers |
+| `GitHubIssueThread`, `ReviewThread`, `ChatThread`, `ThreadedDiscussion` | Components |
+| `GitHubIssueThread`, `ReviewThread`, `ChatThread`, `ThreadedDiscussion` from `@simplishelf/threadcraft/native` | React Native components |
+| `ThreadCraftId`, `ThreadCraftVariant`, `ThreadCraftAttachment`, `ThreadCraftAttachmentInput`, `ThreadCraftAuthorTypeStyle`, `ThreadCraftComment`, `ThreadCraftData`, `ThreadCraftDiscussionProps`, `ThreadCraftIdentityField`, `ThreadCraftIdentityFields`, `ThreadCraftLoadMoreRequest`, `ThreadCraftLoadMoreResult`, `ThreadCraftReplyAuthorType`, `ThreadCraftSubmitPayload` | Types |
+| `buildCommentTree`, `appendReplyToTree`, `appendUniqueRootComments`, `prependUniqueRootComments`, `countRootComments` | Helpers |
 
 ## Development
 

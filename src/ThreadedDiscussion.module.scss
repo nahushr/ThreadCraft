@@ -18,6 +18,18 @@
 
 .root, .root *, .root *::before, .root *::after { box-sizing: border-box; }
 
+.chatRoot {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  background: var(--tc-chat-background, #f8fafc);
+}
+
 .streamHeading {
   display: flex;
   align-items: center;
@@ -31,6 +43,17 @@
 .streamHeading strong { color: var(--tc-text); font-size: 14px; font-weight: 750; }
 .streamHeading span { color: #667085; }
 .stream { display: flex; flex-direction: column; gap: 14px; }
+
+.chatStream {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px 22px;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}
+
+.chatMoreButtonStart { order: -1; }
 
 .empty {
   margin: 0;
@@ -63,4 +86,5 @@
 
 @container threadcraft-discussion (max-width: 600px) {
   .streamHeading { margin-top: 18px; }
+  .chatStream { padding: 14px 12px; }
 }

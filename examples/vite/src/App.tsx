@@ -1,16 +1,20 @@
-import { useState } from "react";
-import { GitHubIssueThread, ReviewThread } from "@simplishelf/threadcraft";
-import type { ThreadCraftData, ThreadCraftSubmitPayload } from "@simplishelf/threadcraft";
+import { useMemo, useState } from "react";
+import { ChatThread, GitHubIssueThread, prependUniqueRootComments, ReviewThread } from "@simplishelf/threadcraft";
+import type { ThreadCraftComment, ThreadCraftData, ThreadCraftLoadMoreRequest, ThreadCraftLoadMoreResult, ThreadCraftSubmitPayload } from "@simplishelf/threadcraft";
 import issueFixture from "./test-data/github-issue.json";
 import reviewFixture from "./test-data/reviews.json";
-import { fetchMoreIssueComments, fetchMoreReviews } from "./mockApi";
+import aiChatFixture from "./test-data/ai-chat.json";
+import aiChatReplyFixture from "./test-data/ai-chat-reply.json";
+import { fetchMoreAiMessages, fetchMoreIssueComments, fetchMoreReviews } from "./mockApi";
 
-type ExampleMode = "issue" | "review";
+type ExampleMode = "issue" | "review" | "chat";
 type PreviewMode = "desktop" | "phone";
 
 const FIRST_PAGE_SIZE = 50;
 const issueFixtureData = issueFixture as ThreadCraftData;
 const reviewFixtureData = reviewFixture as ThreadCraftData;
+const aiChatFixtureData = aiChatFixture as ThreadCraftData;
+const aiChatReply = aiChatReplyFixture as ThreadCraftComment;
 const issueData: ThreadCraftData = {
   ...issueFixtureData,
   comments: issueFixtureData.comments.slice(0, FIRST_PAGE_SIZE),
@@ -27,9 +31,44 @@ const reviewData: ThreadCraftData = {
 export default function App() {
   const [mode, setMode] = useState<ExampleMode>("issue");
   const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
+  const [chatMessages, setChatMessages] = useState<ThreadCraftComment[]>(aiChatFixtureData.comments);
+  const [chatHasMore, setChatHasMore] = useState(aiChatFixtureData.hasMore ?? false);
+  const [chatSubmitting, setChatSubmitting] = useState(false);
+  const chatData = useMemo<ThreadCraftData>(() => ({
+    ...aiChatFixtureData,
+    comments: chatMessages,
+    hasMore: chatHasMore,
+  }), [chatHasMore, chatMessages]);
   const onSubmit = async (payload: ThreadCraftSubmitPayload): Promise<void> => {
     await new Promise((resolve) => window.setTimeout(resolve, 250));
     console.info("Example comment payload:", payload);
+  };
+  const onSubmitChat = async (payload: ThreadCraftSubmitPayload): Promise<void> => {
+    const submittedAt = Date.now();
+    setChatSubmitting(true);
+    setChatMessages((current) => [...current, {
+      id: `demo-user-${submittedAt}`,
+      author: "Alex Morgan",
+      authorType: "user",
+      isMine: true,
+      text: payload.text,
+      createdAt: new Date(submittedAt).toISOString(),
+    }]);
+    await new Promise((resolve) => window.setTimeout(resolve, 550));
+    setChatMessages((current) => [...current, {
+      ...aiChatReply,
+      id: `demo-assistant-${submittedAt}`,
+      createdAt: new Date().toISOString(),
+    }]);
+    setChatSubmitting(false);
+  };
+  const onLoadOlderChatMessages = async (
+    request: ThreadCraftLoadMoreRequest,
+  ): Promise<ThreadCraftLoadMoreResult> => {
+    const page = await fetchMoreAiMessages(request);
+    setChatMessages((current) => prependUniqueRootComments(current, page.comments));
+    setChatHasMore(page.hasMore ?? false);
+    return page;
   };
 
   const discussion = mode === "issue" ? (
@@ -42,7 +81,7 @@ export default function App() {
       onLoadMore={fetchMoreIssueComments}
       onSubmitComment={onSubmit}
     />
-  ) : (
+  ) : mode === "review" ? (
     <ReviewThread
       data={reviewData}
       currentUser="Alex Morgan"
@@ -51,6 +90,23 @@ export default function App() {
       loadMoreCount={50}
       onLoadMore={fetchMoreReviews}
       onSubmitComment={onSubmit}
+    />
+  ) : (
+    <ChatThread
+      data={chatData}
+      currentUser="Alex Morgan"
+      showHeader={false}
+      showStreamHeading={false}
+      initialRootLimit={50}
+      loadMoreCount={50}
+      loadMoreLabel="Load older messages"
+      allowReplies={false}
+      allowReactions={false}
+      allowAttachments={false}
+      controlledComments
+      typingIndicator={chatSubmitting}
+      onLoadMore={onLoadOlderChatMessages}
+      onSubmitComment={onSubmitChat}
     />
   );
 
@@ -66,14 +122,15 @@ export default function App() {
       </header>
 
       <section className="demo-intro">
-        <p className="demo-kicker">NESTED CONVERSATIONS FOR REACT</p>
-        <h1>One thread component, two use cases.</h1>
-        <p>Pass a nested JSON object, then plug in your own submit and pagination functions.</p>
+        <p className="demo-kicker">CONVERSATIONS FOR REACT</p>
+        <h1>One package, three conversation use cases.</h1>
+        <p>Pass JSON data, then connect your own submit and history functions.</p>
       </section>
 
       <nav className="demo-tabs" aria-label="Choose a demo">
         <button className={mode === "issue" ? "selected" : ""} onClick={() => setMode("issue")} type="button">GitHub issue</button>
         <button className={mode === "review" ? "selected" : ""} onClick={() => setMode("review")} type="button">Product reviews</button>
+        <button className={mode === "chat" ? "selected" : ""} onClick={() => setMode("chat")} type="button">AI chat</button>
       </nav>
 
       <div className="demo-preview-toolbar">
@@ -112,7 +169,7 @@ export default function App() {
           </div>
         )}
         <section
-          aria-label={previewMode === "phone" ? "Phone-sized discussion preview" : undefined}
+          aria-label={previewMode === "phone" ? "Phone-sized conversation preview" : undefined}
           className={`demo-panel ${previewMode === "phone" ? "demo-panel--phone" : ""}`}
         >
           {discussion}
@@ -120,7 +177,7 @@ export default function App() {
         {previewMode === "phone" && <div className="demo-phone-home" aria-hidden="true" />}
       </div>
 
-      <footer className="demo-footer">Data is stored in <code>src/test-data</code>. “See more” waits 650 ms to mimic an API request.</footer>
+      <footer className="demo-footer">Conversation fixtures are checked-in JSON; comment and history pages use delayed mock requests.</footer>
     </main>
   );
 }

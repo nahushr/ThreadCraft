@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendReplyToTree, appendUniqueRootComments, buildCommentTree, countRootComments } from "./threadUtils";
+import { appendReplyToTree, appendUniqueRootComments, buildCommentTree, countRootComments, prependUniqueRootComments } from "./threadUtils";
 import type { ThreadCraftComment } from "./types";
 
 describe("buildCommentTree", () => {
@@ -70,5 +70,19 @@ describe("thread operations", () => {
     const second: ThreadCraftComment = { id: 3, author: "Jo", text: "Next" };
     expect(appendUniqueRootComments([first], [first, second, second])).toEqual([first, second]);
     expect(countRootComments([first, second])).toBe(2);
+  });
+
+  it("prepends unique older messages without changing chronological order", () => {
+    const current: ThreadCraftComment[] = [
+      { id: 3, author: "Ari", text: "Newest" },
+      { id: 4, author: "AI", text: "Latest answer" },
+    ];
+    const older: ThreadCraftComment[] = [
+      { id: 1, author: "Ari", text: "Old question" },
+      { id: 2, author: "AI", text: "Old answer" },
+      { id: 3, author: "Ari", text: "Duplicate newest" },
+    ];
+
+    expect(prependUniqueRootComments(current, older).map(({ id }) => id)).toEqual([1, 2, 3, 4]);
   });
 });

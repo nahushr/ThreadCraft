@@ -1,4 +1,4 @@
-import type { JSX } from "react";
+import type { JSX, ReactNode } from "react";
 import {
   Image,
   type ImageStyle,
@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
-import type { ThreadCraftAuthorTypeStyle, ThreadCraftComment } from "../types";
+import type { ThreadCraftAuthorTypeStyle, ThreadCraftComment, ThreadCraftVariant } from "../types";
 import { formatDate, getInitials } from "../utils/formatDate";
 import { normalizeReactions, REACTION_EMOJIS } from "../utils/reactions";
 import { nativeStyles as styles } from "./styles";
@@ -16,6 +16,8 @@ interface NativeCommentCardProps {
   comment: ThreadCraftComment;
   authorTypeStyles?: Record<string, ThreadCraftAuthorTypeStyle>;
   depth: number;
+  variant: ThreadCraftVariant;
+  renderCommentBody?: (comment: ThreadCraftComment) => ReactNode;
   showRating: boolean;
   allowReplies: boolean;
   allowReactions: boolean;
@@ -37,6 +39,8 @@ const NativeCommentCard = ({
   comment,
   authorTypeStyles,
   depth,
+  variant,
+  renderCommentBody,
   showRating,
   allowReplies,
   allowReactions,
@@ -50,9 +54,17 @@ const NativeCommentCard = ({
   const reactions = { ...normalizeReactions(comment.reactions), ...(reactionCounts[commentKey] || {}) };
   const selected = selectedReactions[commentKey] || [];
   const rating = comment.rating ?? comment.ratings;
+  const isChatUser = variant === "chat" && (
+    Boolean(comment.isMine) || comment.authorType?.toLowerCase() === "user" || comment.authorType?.toLowerCase() === "customer"
+  );
 
   return (
-    <View style={[styles.comment, depth > 0 && styles.replies]}>
+    <View style={[
+      styles.comment,
+      depth > 0 && styles.replies,
+      variant === "chat" && styles.chatMessage,
+      variant === "chat" && isChatUser && styles.chatMessageUser,
+    ]}>
       <View style={styles.commentHeading}>
         <View style={[
           styles.avatar,
@@ -89,15 +101,20 @@ const NativeCommentCard = ({
 
       <View style={[
         styles.card,
+        variant === "chat" && (isChatUser ? styles.chatCardUser : styles.chatCardAssistant),
         {
           backgroundColor: comment.cardColor || roleStyle?.cardColor || "#fff",
           borderColor: comment.cardBorderColor || roleStyle?.cardBorderColor || "#e4e7ec",
         },
       ]}>
         {comment.quotedAuthor ? <Text style={styles.replyBannerTitle}>↳ {comment.quotedAuthor}</Text> : null}
-        <Text style={[styles.commentText, { color: comment.cardTextColor || roleStyle?.cardTextColor || "#344054" }]}>
-          {comment.text ?? comment.body ?? ""}
-        </Text>
+        {renderCommentBody ? (
+          <View>{renderCommentBody(comment)}</View>
+        ) : (
+          <Text style={[styles.commentText, { color: comment.cardTextColor || roleStyle?.cardTextColor || "#344054" }]}>
+            {comment.text ?? comment.body ?? ""}
+          </Text>
+        )}
         {showRating && rating != null && (
           <View style={styles.rating}>
             <Text style={styles.ratingText}>
@@ -161,6 +178,8 @@ const NativeCommentCard = ({
               comment={reply}
               authorTypeStyles={authorTypeStyles}
               depth={depth + 1}
+              variant={variant}
+              renderCommentBody={renderCommentBody}
               showRating={showRating}
               allowReplies={allowReplies}
               allowReactions={allowReactions}

@@ -1,4 +1,7 @@
+import type { ReactNode } from "react";
+
 export type ThreadCraftId = string | number;
+export type ThreadCraftVariant = "issue" | "review" | "chat";
 
 export interface ThreadCraftAttachment {
   name: string;
@@ -56,7 +59,7 @@ export interface ThreadCraftComment {
 /** One JSON object describes the issue or product and the first page of comments. */
 export interface ThreadCraftData {
   id?: ThreadCraftId;
-  kind?: "issue" | "review";
+  kind?: ThreadCraftVariant;
   title: string;
   author?: string;
   authorAvatarUrl?: string;
@@ -84,7 +87,7 @@ export interface ThreadCraftLoadMoreResult {
   hasMore?: boolean;
 }
 
-export type ThreadCraftReplyAuthorType = "customer" | "business" | "support";
+export type ThreadCraftReplyAuthorType = "customer" | "business" | "support" | "user";
 
 export interface ThreadCraftIdentityField {
   label: string;
@@ -112,7 +115,7 @@ export interface ThreadCraftSubmitPayload {
 
 export interface ThreadCraftDiscussionProps {
   data: ThreadCraftData;
-  variant?: "issue" | "review";
+  variant?: ThreadCraftVariant;
   currentUser?: string;
   /** Whether to render the issue/review metadata card. Defaults to true. */
   showHeader?: boolean;
@@ -125,6 +128,28 @@ export interface ThreadCraftDiscussionProps {
   allowNewComments?: boolean;
   allowAttachments?: boolean;
   allowReactions?: boolean;
+  /** Show the stream title and message/review count. Defaults to true. */
+  showStreamHeading?: boolean;
+  /** Place paged results at the top for older chat history, or at the bottom. */
+  loadMorePlacement?: "start" | "end";
+  loadMoreLabel?: string;
+  loadingMoreLabel?: string;
+  loadMoreErrorText?: string;
+  emptyMessage?: string;
+  inputPlaceholder?: string;
+  composerLabel?: string;
+  submitButtonLabel?: string;
+  submittingLabel?: string;
+  allowEmoji?: boolean;
+  /** Show a package-styled assistant typing indicator in chat mode. */
+  typingIndicator?: boolean;
+  typingIndicatorLabel?: string;
+  /** Disable the composer while the host application is processing a message. */
+  isSubmitting?: boolean;
+  /** Sync changed data.comments props into the rendered message list. */
+  controlledComments?: boolean;
+  /** Render comment content with an app-specific safe Markdown renderer when needed. */
+  renderCommentBody?: (comment: ThreadCraftComment) => ReactNode;
   /** Show stars on review comments; independent of whether the composer collects a rating. */
   showRating?: boolean;
   allowRatingInput?: boolean;

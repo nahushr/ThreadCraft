@@ -28,5 +28,5 @@ export const normalizeReactions = (
 export const isCustomerComment = (comment: ThreadCraftComment): boolean => {
   const authorType = comment.authorType?.toLowerCase();
   return Boolean(comment.isCustomer || comment.isMine) ||
-    authorType === "customer" || authorType === "bot";
+    authorType === "customer" || authorType === "user" || authorType === "bot";
 };

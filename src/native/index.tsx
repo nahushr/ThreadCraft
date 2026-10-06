@@ -16,7 +16,11 @@ export const ReviewThread = (props: ThreadedDiscussionProps): JSX.Element => (
   <NativeDiscussion {...props} variant="review" />
 );
 
-export { appendReplyToTree, appendUniqueRootComments, buildCommentTree, countRootComments } from "../threadUtils";
+export const ChatThread = (props: ThreadedDiscussionProps): JSX.Element => (
+  <NativeDiscussion {...props} variant="chat" />
+);
+
+export { appendReplyToTree, appendUniqueRootComments, buildCommentTree, countRootComments, prependUniqueRootComments } from "../threadUtils";
 export type {
   ThreadCraftAuthorTypeStyle,
   ThreadCraftAttachment,
@@ -31,4 +35,5 @@ export type {
   ThreadCraftLoadMoreResult,
   ThreadCraftReplyAuthorType,
   ThreadCraftSubmitPayload,
+  ThreadCraftVariant,
 } from "../types";

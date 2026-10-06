@@ -1,5 +1,5 @@
-import type { CSSProperties, JSX } from "react";
-import type { ThreadCraftAuthorTypeStyle, ThreadCraftComment } from "../types";
+import type { CSSProperties, JSX, ReactNode } from "react";
+import type { ThreadCraftAuthorTypeStyle, ThreadCraftComment, ThreadCraftVariant } from "../types";
 import { formatDate, getInitials } from "../utils/formatDate";
 import { isCustomerComment, normalizeReactions, REACTION_EMOJIS } from "../utils/reactions";
 import CommentAttachments from "./CommentAttachments";
@@ -17,6 +17,8 @@ export interface CommentThreadProps {
   showRating: boolean;
   allowReplies: boolean;
   allowReactions: boolean;
+  variant: ThreadCraftVariant;
+  renderCommentBody?: (comment: ThreadCraftComment) => ReactNode;
   onReply: (comment: ThreadCraftComment) => void;
   reactionCounts: Record<string, Record<string, number>>;
   selectedReactions: Record<string, string[]>;
@@ -30,6 +32,8 @@ const CommentThread = ({
   showRating,
   allowReplies,
   allowReactions,
+  variant,
+  renderCommentBody,
   onReply,
   reactionCounts,
   selectedReactions,
@@ -41,11 +45,16 @@ const CommentThread = ({
   const rating = comment.rating ?? comment.ratings;
   const isCustomer = isCustomerComment(comment);
   const authorType = comment.authorType?.toLowerCase();
+  const isChatUser = variant === "chat" && (
+    Boolean(comment.isMine) || authorType === "user" || authorType === "customer"
+  );
   const authorTypeStyle = authorType
     ? authorTypeStyles?.[comment.authorType || ""] ?? authorTypeStyles?.[authorType]
     : undefined;
   const avatarClassName = `${styles.avatar} ${isCustomer ? styles.avatarCustomer : styles.avatarSupport}`;
-  const bubbleClassName = `${styles.bubble} ${isCustomer ? styles.bubbleCustomer : styles.bubbleSupport}`;
+  const bubbleClassName = variant === "chat"
+    ? `${styles.bubble} ${isChatUser ? styles.bubbleChatUser : styles.bubbleChatAssistant}`
+    : `${styles.bubble} ${isCustomer ? styles.bubbleCustomer : styles.bubbleSupport}`;
   const badgeStyle = styleFromVariables({
     "--tc-author-chip-color": authorTypeStyle?.color,
     "--tc-author-chip-background": authorTypeStyle?.backgroundColor,
@@ -63,8 +72,8 @@ const CommentThread = ({
   });
 
   return (
-    <article className={`${styles.comment} ${depth > 0 ? styles.reply : ""}`}>
-      <div className={styles.heading}>
+    <article className={`${styles.comment} ${depth > 0 ? styles.reply : ""} ${variant === "chat" ? `${styles.chatMessage} ${isChatUser ? styles.chatMessageUser : styles.chatMessageAssistant}` : ""}`}>
+      <div className={`${styles.heading} ${variant === "chat" ? styles.chatHeading : ""}`}>
         {comment.authorAvatarUrl ? (
           <img className={avatarClassName} src={comment.authorAvatarUrl} alt="" style={avatarStyle} />
         ) : (
@@ -84,7 +93,9 @@ const CommentThread = ({
       </div>
 
       <div className={bubbleClassName} style={cardStyle}>
-        <p className={styles.text}>{comment.text ?? comment.body ?? ""}</p>
+        <div className={styles.text}>
+          {renderCommentBody ? renderCommentBody(comment) : comment.text ?? comment.body ?? ""}
+        </div>
         {showRating && rating != null && (
           <div className={styles.rating} aria-label={`Rated ${rating} out of 5`}>
             <span aria-hidden="true">
@@ -139,6 +150,8 @@ const CommentThread = ({
               showRating={showRating}
               allowReplies={allowReplies}
               allowReactions={allowReactions}
+              variant={variant}
+              renderCommentBody={renderCommentBody}
               onReply={onReply}
               reactionCounts={reactionCounts}
               selectedReactions={selectedReactions}

@@ -11,6 +11,17 @@
   backdrop-filter: blur(10px);
 }
 
+.chatComposer {
+  position: relative;
+  flex: 0 0 auto;
+  margin-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 0;
+  border-radius: 0;
+  box-shadow: 0 -4px 16px rgb(16 24 40 / 4%);
+}
+
 .input {
   display: block;
   width: 100%;

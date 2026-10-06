@@ -36,6 +36,12 @@ jobs:
           npm test
           npm run build
 
+      - name: Link the just-built package into the example
+        run: |
+          set -euo pipefail
+          mv node_modules/@simplishelf/threadcraft node_modules/@simplishelf/threadcraft-registry-copy
+          ln -s "$GITHUB_WORKSPACE" node_modules/@simplishelf/threadcraft
+
       - name: Build the Vite example
         run: npm run build --workspace threadcraft-vite-example
 

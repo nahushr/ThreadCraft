@@ -176,4 +176,19 @@ export const appendUniqueRootComments = (
   return [...current, ...uniqueNext];
 };
 
+/** Prepends older history while dropping duplicate root messages by ID. */
+export const prependUniqueRootComments = (
+  current: ThreadCraftComment[],
+  older: ThreadCraftComment[],
+): ThreadCraftComment[] => {
+  const ids = new Set(current.map((comment) => idKey(comment.id)));
+  const uniqueOlder = older.filter((comment) => {
+    const key = idKey(comment.id);
+    if (ids.has(key)) return false;
+    ids.add(key);
+    return true;
+  });
+  return [...uniqueOlder, ...current];
+};
+
 export const countRootComments = (comments: ThreadCraftComment[]): number => comments.length;

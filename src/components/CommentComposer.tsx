@@ -6,6 +6,7 @@ import type {
   ThreadCraftIdentityFields,
   ThreadCraftReplyAuthorType,
   ThreadCraftSubmitPayload,
+  ThreadCraftVariant,
 } from "../types";
 import AttachmentPicker from "./AttachmentPicker";
 import EmojiPicker from "./EmojiPicker";
@@ -14,7 +15,7 @@ import ReplyRolePicker from "./ReplyRolePicker";
 import styles from "./CommentComposer.module.scss";
 
 const getDefaultReplyAuthorType = (
-  variant: "issue" | "review",
+  variant: ThreadCraftVariant,
   options?: ThreadCraftReplyAuthorType[],
 ): ThreadCraftReplyAuthorType => {
   const preferred = variant === "review" ? "business" : "support";
@@ -22,13 +23,19 @@ const getDefaultReplyAuthorType = (
 };
 
 interface CommentComposerProps {
-  variant: "issue" | "review";
+  variant: ThreadCraftVariant;
   showRating: boolean;
   allowRatingInput: boolean;
   allowAttachments: boolean;
+  allowEmoji: boolean;
   replyAuthorTypes?: ThreadCraftReplyAuthorType[];
   newCommentAuthorType: ThreadCraftReplyAuthorType;
   identityFields?: ThreadCraftIdentityFields;
+  inputPlaceholder?: string;
+  composerLabel?: string;
+  submitButtonLabel?: string;
+  submittingLabel?: string;
+  isSubmitting?: boolean;
   replyingTo: ThreadCraftComment | null;
   onCancelReply: () => void;
   onSubmit: (payload: ThreadCraftSubmitPayload) => Promise<void>;
@@ -39,9 +46,15 @@ const CommentComposer = ({
   showRating,
   allowRatingInput,
   allowAttachments,
+  allowEmoji,
   replyAuthorTypes,
   newCommentAuthorType,
   identityFields,
+  inputPlaceholder,
+  composerLabel,
+  submitButtonLabel,
+  submittingLabel,
+  isSubmitting = false,
   replyingTo,
   onCancelReply,
   onSubmit,
@@ -82,7 +95,7 @@ const CommentComposer = ({
   const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
     const text = draft.trim();
-    if (!text || sending) return;
+    if (!text || sending || isSubmitting) return;
 
     setSending(true);
     setError("");
@@ -111,14 +124,16 @@ const CommentComposer = ({
     inputRef.current?.focus();
   };
 
-  const label = replyingTo
+  const label = composerLabel || (replyingTo
     ? "Write a reply"
     : showRating
       ? "Write a review"
-      : "Add a comment";
+      : variant === "chat"
+        ? "Send a message"
+        : "Add a comment");
 
   return (
-    <form className={styles.composer} onSubmit={(event) => void handleSubmit(event)}>
+    <form className={`${styles.composer} ${variant === "chat" ? styles.chatComposer : ""}`.trim()} onSubmit={(event) => void handleSubmit(event)}>
       {replyingTo && (
         <div className={styles.replyBanner}>
           <span className={styles.quoteIcon} aria-hidden="true">↳</span>
@@ -144,7 +159,7 @@ const CommentComposer = ({
           <span>{identityFields.authorName.label}</span>
           <input
             autoComplete="name"
-            disabled={sending}
+            disabled={sending || isSubmitting}
             id={nameId}
             placeholder={identityFields.authorName.placeholder}
             required={identityFields.authorName.required}
@@ -159,7 +174,7 @@ const CommentComposer = ({
           <span>{identityFields.authorEmail.label}</span>
           <input
             autoComplete="email"
-            disabled={sending}
+            disabled={sending || isSubmitting}
             id={emailId}
             placeholder={identityFields.authorEmail.placeholder}
             required={identityFields.authorEmail.required}
@@ -173,9 +188,15 @@ const CommentComposer = ({
       <label className={styles.screenReaderOnly} htmlFor={inputId}>{label}</label>
       <textarea
         className={styles.input}
-        disabled={sending}
+        disabled={sending || isSubmitting}
         id={inputId}
-        placeholder={replyingTo ? `Reply to ${replyingTo.author}…` : showRating ? "Share your review…" : "Write a comment…"}
+        placeholder={inputPlaceholder ?? (replyingTo
+          ? `Reply to ${replyingTo.author}…`
+          : showRating
+            ? "Share your review…"
+            : variant === "chat"
+              ? "Message the assistant…"
+              : "Write a comment…")}
         ref={inputRef}
         rows={3}
         value={draft}
@@ -194,22 +215,24 @@ const CommentComposer = ({
           {allowAttachments && (
             <AttachmentPicker
               attachments={attachments}
-              disabled={sending}
+              disabled={sending || isSubmitting}
               onChange={setAttachments}
             />
           )}
-          <EmojiPicker disabled={sending} onSelect={insertEmoji} />
+          {allowEmoji && <EmojiPicker disabled={sending || isSubmitting} onSelect={insertEmoji} />}
           {replyingTo && (
             <ReplyRolePicker
-              disabled={sending}
+              disabled={sending || isSubmitting}
               value={replyAuthorType}
-              variant={variant}
+              variant={variant === "review" ? "review" : "issue"}
               onChange={setReplyAuthorType}
             />
           )}
         </div>
-        <button className={styles.sendButton} disabled={sending || !draft.trim()} type="submit">
-          {sending ? "Posting…" : replyingTo ? "Reply" : variant === "review" ? "Post review" : "Send"}
+        <button className={styles.sendButton} disabled={sending || isSubmitting || !draft.trim()} type="submit">
+          {sending || isSubmitting
+            ? submittingLabel ?? (variant === "chat" ? "Thinking…" : "Posting…")
+            : submitButtonLabel ?? (replyingTo ? "Reply" : variant === "review" ? "Post review" : "Send")}
         </button>
       </div>
     </form>

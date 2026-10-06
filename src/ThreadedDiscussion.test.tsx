@@ -1,12 +1,94 @@
 /** @vitest-environment jsdom */
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { GitHubIssueThread, ReviewThread } from "./ThreadedDiscussion";
-import type { ThreadCraftData } from "./types";
+import { ChatThread, GitHubIssueThread, ReviewThread } from "./ThreadedDiscussion";
+import type { ThreadCraftComment, ThreadCraftData } from "./types";
 
 afterEach(cleanup);
 
 describe("ThreadedDiscussion examples", () => {
+  it("loads older chat messages at the top", async () => {
+    const data: ThreadCraftData = {
+      kind: "chat",
+      title: "AI assistant",
+      hasMore: true,
+      comments: [{ id: "newer", author: "Alex", authorType: "user", isMine: true, text: "Newest question" }],
+    };
+    const onLoadMore = vi.fn(async () => ({
+      comments: [{ id: "older", author: "AI Assistant", authorType: "assistant", text: "Older answer" }],
+      hasMore: false,
+    }));
+    const { container } = render(
+      <ChatThread
+        data={data}
+        showHeader={false}
+        showStreamHeading={false}
+        allowReplies={false}
+        allowReactions={false}
+        onLoadMore={onLoadMore}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Load older messages" }));
+
+    expect(await screen.findByText("Older answer")).toBeTruthy();
+    expect(container.textContent?.indexOf("Older answer")).toBeLessThan(container.textContent?.indexOf("Newest question") ?? -1);
+    expect(onLoadMore).toHaveBeenCalledWith({ offset: 1, limit: 50 });
+  });
+
+  it("syncs controlled chat messages and does not add a duplicate optimistic message", async () => {
+    const initial: ThreadCraftComment[] = [{
+      id: "welcome",
+      author: "AI Assistant",
+      authorType: "assistant",
+      text: "How can I help?",
+    }];
+    const ControlledChat = () => {
+      const [comments, setComments] = useState(initial);
+      const [typing, setTyping] = useState(false);
+      const onSubmit = async ({ text }: { text: string }) => {
+        setTyping(true);
+        setComments((current) => [...current, {
+          id: "user-question",
+          author: "Alex",
+          authorType: "user",
+          isMine: true,
+          text,
+        }]);
+        await Promise.resolve();
+        setComments((current) => [...current, {
+          id: "assistant-answer",
+          author: "AI Assistant",
+          authorType: "assistant",
+          text: "I found three matching reports.",
+        }]);
+        setTyping(false);
+      };
+      return (
+        <ChatThread
+          data={{ kind: "chat", title: "AI assistant", comments }}
+          currentUser="Alex"
+          showHeader={false}
+          showStreamHeading={false}
+          controlledComments
+          typingIndicator={typing}
+          allowReplies={false}
+          allowReactions={false}
+          onSubmitComment={(payload) => onSubmit(payload)}
+        />
+      );
+    };
+
+    render(<ControlledChat />);
+    fireEvent.change(screen.getByLabelText("Send a message"), { target: { value: "Find recent reports" } });
+    fireEvent.submit(screen.getByLabelText("Send a message").closest("form")!);
+
+    expect(await screen.findByText("I found three matching reports.")).toBeTruthy();
+    expect(screen.getAllByText("Find recent reports")).toHaveLength(1);
+    expect(screen.queryByRole("status", { name: "AI assistant is thinking" })).toBeNull();
+  });
+
   it("loads the next root page asynchronously and appends it", async () => {
     const data: ThreadCraftData = {
       id: 42,

@@ -2,9 +2,11 @@ import type {
   ThreadCraftData,
   ThreadCraftLoadMoreRequest,
   ThreadCraftLoadMoreResult,
+  ThreadCraftComment,
 } from "@simplishelf/threadcraft";
 import issueFixture from "./test-data/github-issue.json";
 import reviewFixture from "./test-data/reviews.json";
+import aiChatOlderFixture from "./test-data/ai-chat-older.json";
 
 const issueComments = (issueFixture as ThreadCraftData).comments;
 const reviewComments = (reviewFixture as ThreadCraftData).comments;
@@ -32,4 +34,16 @@ export async function fetchMoreReviews(
 ): Promise<ThreadCraftLoadMoreResult> {
   await wait(650);
   return pageFromFixture(reviewComments, request);
+}
+
+/** Delayed mock endpoint that prepends the checked-in older AI conversation. */
+export async function fetchMoreAiMessages(
+  request: ThreadCraftLoadMoreRequest,
+): Promise<ThreadCraftLoadMoreResult> {
+  await wait(650);
+  const comments = aiChatOlderFixture as ThreadCraftComment[];
+  return {
+    comments: comments.slice(0, request.limit),
+    hasMore: false,
+  };
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
 import type {
   ThreadCraftComment,
@@ -10,11 +10,13 @@ import {
   appendReplyToTree,
   appendUniqueRootComments,
   buildCommentTree,
+  prependUniqueRootComments,
 } from "./threadUtils";
 import { normalizeReactions } from "./utils/reactions";
 import CommentComposer from "./components/CommentComposer";
 import CommentThread from "./components/CommentThread";
 import DiscussionHeader from "./components/DiscussionHeader";
+import ChatTypingIndicator from "./components/ChatTypingIndicator";
 import styles from "./ThreadedDiscussion.module.scss";
 
 let fallbackCommentIdSequence = 0;
@@ -38,6 +40,17 @@ const countComments = (comments: ThreadCraftComment[]): number =>
 const getParentId = (comment: ThreadCraftComment | null): ThreadCraftId | undefined =>
   comment?.id;
 
+const isOlderHistory = (
+  current: ThreadCraftComment[],
+  next: ThreadCraftComment[],
+): boolean => Boolean(
+  current.length > 0 &&
+  next.length > current.length &&
+  String(next[0]?.id) !== String(current[0]?.id) &&
+  next.some((comment) => String(comment.id) === String(current[0]?.id)) &&
+  String(next[next.length - 1]?.id) === String(current[current.length - 1]?.id),
+);
+
 const Discussion = ({
   data,
   variant: requestedVariant,
@@ -55,11 +68,29 @@ const Discussion = ({
   newCommentAuthorType,
   newCommentPosition = "end",
   identityFields,
+  showStreamHeading = true,
+  loadMorePlacement,
+  loadMoreLabel,
+  loadingMoreLabel,
+  loadMoreErrorText,
+  emptyMessage,
+  inputPlaceholder,
+  composerLabel,
+  submitButtonLabel,
+  submittingLabel,
+  allowEmoji = true,
+  typingIndicator = false,
+  typingIndicatorLabel,
+  isSubmitting = false,
+  controlledComments = false,
+  renderCommentBody,
   onLoadMore,
   onSubmitComment,
   onReact,
 }: ThreadCraftDiscussionProps): JSX.Element => {
   const variant = requestedVariant || data.kind || "issue";
+  const isChat = variant === "chat";
+  const olderMessagesPlacement = loadMorePlacement ?? (isChat ? "start" : "end");
   const pageSize = Math.max(1, loadMoreCount || initialRootLimit || 50);
   const initialLimit = Math.max(1, initialRootLimit || 50);
   const normalizedComments = useMemo(
@@ -68,7 +99,9 @@ const Discussion = ({
   );
   const dataKey = `${variant}:${String(data.id ?? data.title)}`;
   const [comments, setComments] = useState(normalizedComments);
-  const [visibleRootCount, setVisibleRootCount] = useState(initialLimit);
+  const [visibleRootCount, setVisibleRootCount] = useState(
+    isChat ? Math.max(initialLimit, normalizedComments.length) : initialLimit,
+  );
   const [hasMore, setHasMore] = useState(
     data.hasMore ?? normalizedComments.length > initialLimit,
   );
@@ -78,16 +111,44 @@ const Discussion = ({
   const [reactionCounts, setReactionCounts] = useState<Record<string, Record<string, number>>>({});
   const [selectedReactions, setSelectedReactions] = useState<Record<string, string[]>>({});
   const lastDataKey = useRef(dataKey);
+  const lastSyncedData = useRef({ dataKey, comments: data.comments, hasMore: data.hasMore });
+  const streamRef = useRef<HTMLDivElement | null>(null);
+  const scrollIntent = useRef<{ kind: "bottom" } | { kind: "preserve"; top: number; height: number }>({ kind: "bottom" });
   const showRating = showRatingProp ?? (variant === "review" && data.showRating === true);
   const allowRatingInput = allowRatingInputProp ?? showRating;
-  const resolvedNewCommentAuthorType = newCommentAuthorType ?? (variant === "review" ? "customer" : "support");
+  const resolvedNewCommentAuthorType = newCommentAuthorType ?? (variant === "review" ? "customer" : isChat ? "user" : "support");
   const resolvedReplyAuthorTypes = replyAuthorTypes?.length
     ? replyAuthorTypes
     : variant === "review"
       ? ["customer", "business"] as const
-      : ["support", "customer"] as const;
+      : isChat
+        ? [] as const
+        : ["support", "customer"] as const;
 
   useEffect(() => {
+    if (controlledComments) {
+      const previous = lastSyncedData.current;
+      const keyChanged = previous.dataKey !== dataKey;
+      if (!keyChanged && previous.comments === data.comments && previous.hasMore === data.hasMore) return;
+      if (isChat && !keyChanged && isOlderHistory(previous.comments || [], data.comments || [])) {
+        const stream = streamRef.current;
+        scrollIntent.current = { kind: "preserve", top: stream?.scrollTop || 0, height: stream?.scrollHeight || 0 };
+      } else if (isChat) {
+        scrollIntent.current = { kind: "bottom" };
+      }
+      lastSyncedData.current = { dataKey, comments: data.comments, hasMore: data.hasMore };
+      setComments(normalizedComments);
+      setVisibleRootCount(isChat ? Math.max(initialLimit, normalizedComments.length) : initialLimit);
+      setHasMore(data.hasMore ?? normalizedComments.length > initialLimit);
+      if (keyChanged) {
+        setReplyingTo(null);
+        setLoadError("");
+        setReactionCounts({});
+        setSelectedReactions({});
+      }
+      lastDataKey.current = dataKey;
+      return;
+    }
     if (lastDataKey.current === dataKey) return;
     lastDataKey.current = dataKey;
     setComments(normalizedComments);
@@ -97,12 +158,25 @@ const Discussion = ({
     setLoadError("");
     setReactionCounts({});
     setSelectedReactions({});
-  }, [data.hasMore, dataKey, initialLimit, normalizedComments]);
+  }, [controlledComments, data.comments, data.hasMore, dataKey, initialLimit, isChat, normalizedComments]);
+
+  useLayoutEffect(() => {
+    if (!isChat) return;
+    const stream = streamRef.current;
+    if (!stream) return;
+    if (scrollIntent.current.kind === "preserve") {
+      const previous = scrollIntent.current;
+      stream.scrollTop = previous.top + Math.max(0, stream.scrollHeight - previous.height);
+    } else {
+      stream.scrollTop = stream.scrollHeight;
+    }
+    scrollIntent.current = { kind: "bottom" };
+  }, [comments, isChat, typingIndicator]);
 
   const visibleComments = comments.slice(0, visibleRootCount);
   const canLoadMore = comments.length > visibleRootCount || (hasMore && Boolean(onLoadMore));
   const commentCount = countComments(comments);
-  const sectionTitle = variant === "review" ? "Customer reviews" : "Discussion";
+  const sectionTitle = variant === "review" ? "Customer reviews" : isChat ? "Messages" : "Discussion";
 
   const handleReply = (comment: ThreadCraftComment): void => {
     setReplyingTo(comment);
@@ -147,11 +221,19 @@ const Discussion = ({
       if (!onLoadMore) return;
       const result = await onLoadMore({ offset: comments.length, limit: pageSize });
       const nextComments = result.comments || [];
-      setComments((current) => appendUniqueRootComments(current, nextComments));
-      setVisibleRootCount((current) => current + nextComments.length);
       setHasMore(result.hasMore ?? nextComments.length >= pageSize);
+      if (controlledComments) return;
+      if (isChat && olderMessagesPlacement === "start") {
+        const stream = streamRef.current;
+        scrollIntent.current = { kind: "preserve", top: stream?.scrollTop || 0, height: stream?.scrollHeight || 0 };
+        setComments((current) => prependUniqueRootComments(current, nextComments));
+      } else {
+        scrollIntent.current = { kind: "bottom" };
+        setComments((current) => appendUniqueRootComments(current, nextComments));
+      }
+      setVisibleRootCount((current) => current + nextComments.length);
     } catch {
-      setLoadError("Could not load more comments. Please try again.");
+      setLoadError(loadMoreErrorText ?? (isChat ? "Could not load older messages. Please try again." : "Could not load more comments. Please try again."));
     } finally {
       setLoadingMore(false);
     }
@@ -159,6 +241,10 @@ const Discussion = ({
 
   const handleSubmit = async (payload: ThreadCraftSubmitPayload): Promise<void> => {
     const saved = await onSubmitComment?.(payload);
+    if (isChat && controlledComments) {
+      setReplyingTo(null);
+      return;
+    }
     const comment: ThreadCraftComment = saved
       ? { ...saved, authorType: saved.authorType ?? payload.authorType }
       : {
@@ -176,6 +262,7 @@ const Discussion = ({
     if (parentId != null) {
       setComments((current) => appendReplyToTree(current, parentId, comment));
     } else {
+      scrollIntent.current = { kind: "bottom" };
       setComments((current) => newCommentPosition === "start"
         ? [comment, ...current]
         : [...current, comment]);
@@ -184,23 +271,39 @@ const Discussion = ({
     setReplyingTo(null);
   };
 
+  const moreButton = canLoadMore ? (
+    <button
+      className={`${styles.moreButton} ${olderMessagesPlacement === "start" ? styles.chatMoreButtonStart : ""}`}
+      disabled={loadingMore}
+      type="button"
+      onClick={() => void handleShowMore()}
+    >
+      {loadingMore
+        ? loadingMoreLabel ?? (isChat ? "Loading older messages…" : "Loading comments…")
+        : loadMoreLabel ?? (isChat ? "Load older messages" : "See more comments")}
+    </button>
+  ) : null;
+
   return (
     <section
-      aria-label={variant === "review" ? "Product reviews" : "Issue discussion"}
-      className={styles.root}
+      aria-label={variant === "review" ? "Product reviews" : isChat ? "Chat conversation" : "Issue discussion"}
+      className={`${styles.root} ${isChat ? styles.chatRoot : ""}`.trim()}
     >
       {showHeader && <DiscussionHeader data={data} variant={variant} />}
 
-      <div className={styles.streamHeading}>
-        <strong>{sectionTitle}</strong>
-        <span>
-          {data.totalRootComments ?? commentCount} {variant === "review" ? "reviews" : "comments"}
-        </span>
-      </div>
+      {showStreamHeading && (
+        <div className={styles.streamHeading}>
+          <strong>{sectionTitle}</strong>
+          <span>
+            {data.totalRootComments ?? commentCount} {variant === "review" ? "reviews" : isChat ? "messages" : "comments"}
+          </span>
+        </div>
+      )}
 
-      <div className={styles.stream}>
+      <div className={`${styles.stream} ${isChat ? styles.chatStream : ""}`.trim()} ref={streamRef}>
+        {olderMessagesPlacement === "start" && moreButton}
         {visibleComments.length === 0 ? (
-          <p className={styles.empty}>No replies yet. Start the conversation.</p>
+          <p className={styles.empty}>{emptyMessage ?? (isChat ? "Start a conversation with the assistant." : "No replies yet. Start the conversation.")}</p>
         ) : (
           visibleComments.map((comment) => (
             <CommentThread
@@ -211,6 +314,8 @@ const Discussion = ({
               showRating={showRating}
               allowReplies={allowReplies}
               allowReactions={allowReactions}
+              variant={variant}
+              renderCommentBody={renderCommentBody}
               onReply={handleReply}
               reactionCounts={reactionCounts}
               selectedReactions={selectedReactions}
@@ -218,16 +323,8 @@ const Discussion = ({
             />
           ))
         )}
-        {canLoadMore && (
-          <button
-            className={styles.moreButton}
-            disabled={loadingMore}
-            type="button"
-            onClick={() => void handleShowMore()}
-          >
-            {loadingMore ? "Loading comments…" : "See more comments"}
-          </button>
-        )}
+        {olderMessagesPlacement === "end" && moreButton}
+        {isChat && typingIndicator && <ChatTypingIndicator label={typingIndicatorLabel} />}
         {loadError && <p className={styles.error} role="alert">{loadError}</p>}
       </div>
 
@@ -237,9 +334,15 @@ const Discussion = ({
           showRating={showRating}
           allowRatingInput={allowRatingInput}
           allowAttachments={allowAttachments}
+          allowEmoji={allowEmoji}
           replyAuthorTypes={[...resolvedReplyAuthorTypes]}
           newCommentAuthorType={resolvedNewCommentAuthorType}
           identityFields={identityFields}
+          inputPlaceholder={inputPlaceholder}
+          composerLabel={composerLabel}
+          submitButtonLabel={submitButtonLabel}
+          submittingLabel={submittingLabel}
+          isSubmitting={isSubmitting}
           replyingTo={replyingTo}
           onCancelReply={() => setReplyingTo(null)}
           onSubmit={handleSubmit}
@@ -261,4 +364,8 @@ export const GitHubIssueThread = (props: ThreadCraftDiscussionProps): JSX.Elemen
 
 export const ReviewThread = (props: ThreadCraftDiscussionProps): JSX.Element => (
   <Discussion {...props} variant="review" />
+);
+
+export const ChatThread = (props: ThreadCraftDiscussionProps): JSX.Element => (
+  <Discussion {...props} variant="chat" />
 );

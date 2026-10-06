@@ -1,5 +1,5 @@
-export { ThreadedDiscussion, GitHubIssueThread, ReviewThread } from "./ThreadedDiscussion";
-export { appendReplyToTree, appendUniqueRootComments, buildCommentTree, countRootComments } from "./threadUtils";
+export { ThreadedDiscussion, GitHubIssueThread, ReviewThread, ChatThread } from "./ThreadedDiscussion";
+export { appendReplyToTree, appendUniqueRootComments, buildCommentTree, countRootComments, prependUniqueRootComments } from "./threadUtils";
 export type {
   ThreadCraftAuthorTypeStyle,
   ThreadCraftAttachment,
@@ -14,4 +14,5 @@ export type {
   ThreadCraftLoadMoreResult,
   ThreadCraftReplyAuthorType,
   ThreadCraftSubmitPayload,
+  ThreadCraftVariant,
 } from "./types";

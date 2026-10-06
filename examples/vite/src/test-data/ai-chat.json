@@ -1,0 +1,98 @@
+{
+  "id": "threadcraft-ai-chat-demo",
+  "kind": "chat",
+  "title": "AI assistant workspace conversation",
+  "author": "ThreadCraft Assistant",
+  "hasMore": true,
+  "totalRootComments": 14,
+  "authorTypeStyles": {
+    "user": {
+      "label": "You",
+      "icon": "👤",
+      "color": "#ffffff",
+      "backgroundColor": "#315efb",
+      "borderColor": "#315efb",
+      "cardColor": "#315efb",
+      "cardBorderColor": "#294ec5",
+      "cardTextColor": "#ffffff",
+      "avatarBackgroundColor": "#dce6ff",
+      "avatarTextColor": "#2449cb",
+      "avatarBorderColor": "#ffffff"
+    },
+    "assistant": {
+      "label": "AI",
+      "icon": "✨",
+      "color": "#6941c6",
+      "backgroundColor": "#f2eefe",
+      "borderColor": "#e4d7ff",
+      "cardColor": "#ffffff",
+      "cardBorderColor": "#e4e7ec",
+      "cardTextColor": "#344054",
+      "avatarBackgroundColor": "#eee8ff",
+      "avatarTextColor": "#6941c6",
+      "avatarBorderColor": "#ffffff"
+    }
+  },
+  "comments": [
+    {
+      "id": "chat-recent-01-user",
+      "author": "Alex Morgan",
+      "authorType": "user",
+      "isMine": true,
+      "createdAt": "2026-09-29T14:02:00.000Z",
+      "text": "How many orders were delayed last week?"
+    },
+    {
+      "id": "chat-recent-01-assistant",
+      "author": "AI Assistant",
+      "authorType": "assistant",
+      "createdAt": "2026-09-29T14:02:03.000Z",
+      "text": "There were **18 delayed orders** between September 21 and 27. Eleven were delayed by the carrier, five were waiting on inventory, and two had address issues."
+    },
+    {
+      "id": "chat-recent-02-user",
+      "author": "Alex Morgan",
+      "authorType": "user",
+      "isMine": true,
+      "createdAt": "2026-09-29T14:03:10.000Z",
+      "text": "Which carrier had the most delays?"
+    },
+    {
+      "id": "chat-recent-02-assistant",
+      "author": "AI Assistant",
+      "authorType": "assistant",
+      "createdAt": "2026-09-29T14:03:13.000Z",
+      "text": "Northstar Parcel accounted for **7 of the 11 carrier delays**. Four of those were in the Northeast region; the remaining three were split across the Midwest."
+    },
+    {
+      "id": "chat-recent-03-user",
+      "author": "Alex Morgan",
+      "authorType": "user",
+      "isMine": true,
+      "createdAt": "2026-09-29T14:04:20.000Z",
+      "text": "Compare that with the week before."
+    },
+    {
+      "id": "chat-recent-03-assistant",
+      "author": "AI Assistant",
+      "authorType": "assistant",
+      "createdAt": "2026-09-29T14:04:24.000Z",
+      "text": "The previous week had 12 delayed orders, so delays increased by **50%**. Northstar Parcel had 4 delays that week, up by 3."
+    },
+    {
+      "id": "chat-recent-04-user",
+      "author": "Alex Morgan",
+      "authorType": "user",
+      "isMine": true,
+      "createdAt": "2026-09-29T14:05:11.000Z",
+      "text": "Show me the regional breakdown as a chart."
+    },
+    {
+      "id": "chat-recent-04-assistant",
+      "author": "AI Assistant",
+      "authorType": "assistant",
+      "createdAt": "2026-09-29T14:05:16.000Z",
+      "text": "I’ve prepared the regional chart. Open the response canvas to view it alongside the source totals."
+    }
+  ]
+}

@@ -1,5 +1,16 @@
 .comment { min-width: 0; }
 
+.chatMessage { display: flex; flex-direction: column; max-width: 100%; }
+.chatMessageUser { align-items: flex-end; margin-left: auto; }
+.chatMessageAssistant { align-items: flex-start; margin-right: auto; }
+.chatHeading { width: 100%; }
+.chatMessageUser .chatHeading { justify-content: flex-end; }
+.chatMessageUser .timestamp { width: auto; margin-left: 5px; }
+.bubbleChatUser,
+.bubbleChatAssistant { max-width: min(760px, 84%); }
+.bubbleChatUser { border: 1px solid var(--tc-comment-card-border, #294ec5); border-radius: 18px 18px 5px 18px; color: #fff; background: var(--tc-comment-card-background, linear-gradient(145deg, #315efb, #2449cb)); }
+.bubbleChatAssistant { border: 1px solid var(--tc-comment-card-border, #e4e7ec); border-radius: 5px 18px 18px; background: var(--tc-comment-card-background, #fff); }
+
 .reply {
   margin-top: 12px;
   padding-left: 16px;
@@ -95,6 +106,9 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+.bubbleChatUser .text { color: var(--tc-comment-card-text, #fff); }
+.bubbleChatAssistant .text { color: var(--tc-comment-card-text, #344054); }
 .rating { display: flex; align-items: center; gap: 7px; margin-top: 8px; color: #e6a700; font-size: 14px; }
 .ratingValue { color: #7a5b12; font-size: 11px; font-weight: 650; }
 .actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
@@ -134,4 +148,7 @@
   .reply { padding-left: 10px; }
   .bubble { max-width: 100%; padding: 11px 12px; }
   .timestamp { width: 100%; margin-left: 39px; }
+  .bubbleChatUser,
+  .bubbleChatAssistant { max-width: min(100%, 88%); }
+  .chatMessageUser .timestamp { width: auto; margin-left: 5px; }
 }

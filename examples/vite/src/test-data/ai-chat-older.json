@@ -1,0 +1,47 @@
+[
+  {
+    "id": "chat-older-01-user",
+    "author": "Alex Morgan",
+    "authorType": "user",
+    "isMine": true,
+    "createdAt": "2026-09-26T09:12:00.000Z",
+    "text": "Give me a quick summary of returns this month."
+  },
+  {
+    "id": "chat-older-01-assistant",
+    "author": "AI Assistant",
+    "authorType": "assistant",
+    "createdAt": "2026-09-26T09:12:04.000Z",
+    "text": "There are **42 returns** so far this month. The most common reasons are sizing (15), damaged packaging (11), and changed mind (9)."
+  },
+  {
+    "id": "chat-older-02-user",
+    "author": "Alex Morgan",
+    "authorType": "user",
+    "isMine": true,
+    "createdAt": "2026-09-26T09:13:15.000Z",
+    "text": "How many of those were resolved within two days?"
+  },
+  {
+    "id": "chat-older-02-assistant",
+    "author": "AI Assistant",
+    "authorType": "assistant",
+    "createdAt": "2026-09-26T09:13:18.000Z",
+    "text": "**31 of 42 returns** were resolved within two days. The median resolution time was 1.4 days."
+  },
+  {
+    "id": "chat-older-03-user",
+    "author": "Alex Morgan",
+    "authorType": "user",
+    "isMine": true,
+    "createdAt": "2026-09-26T09:14:02.000Z",
+    "text": "Can you break those down by product category?"
+  },
+  {
+    "id": "chat-older-03-assistant",
+    "author": "AI Assistant",
+    "authorType": "assistant",
+    "createdAt": "2026-09-26T09:14:05.000Z",
+    "text": "Apparel had 24 returns, home goods had 11, and accessories had 7. Sizing issues were limited to apparel."
+  }
+]

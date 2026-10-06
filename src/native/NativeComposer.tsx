@@ -8,16 +8,23 @@ import type {
   ThreadCraftIdentityFields,
   ThreadCraftReplyAuthorType,
   ThreadCraftSubmitPayload,
+  ThreadCraftVariant,
 } from "../types";
 import { nativeStyles as styles } from "./styles";
 import NativeEmojiPicker from "./NativeEmojiPicker";
 
 interface NativeComposerProps {
-  variant: "issue" | "review";
+  variant: ThreadCraftVariant;
   replyingTo: ThreadCraftComment | null;
   showRating: boolean;
   allowRatingInput: boolean;
   allowAttachments: boolean;
+  allowEmoji: boolean;
+  inputPlaceholder?: string;
+  composerLabel?: string;
+  submitButtonLabel?: string;
+  submittingLabel?: string;
+  isSubmitting?: boolean;
   replyAuthorTypes: ThreadCraftReplyAuthorType[];
   newCommentAuthorType: ThreadCraftReplyAuthorType;
   identityFields?: ThreadCraftIdentityFields;
@@ -27,7 +34,7 @@ interface NativeComposerProps {
 }
 
 const getDefaultReplyAuthorType = (
-  variant: "issue" | "review",
+  variant: ThreadCraftVariant,
   options: ThreadCraftReplyAuthorType[],
 ): ThreadCraftReplyAuthorType => {
   const preferred = variant === "review" ? "business" : "support";
@@ -67,6 +74,12 @@ const NativeComposer = ({
   showRating,
   allowRatingInput,
   allowAttachments,
+  allowEmoji,
+  inputPlaceholder,
+  composerLabel,
+  submitButtonLabel,
+  submittingLabel,
+  isSubmitting = false,
   replyAuthorTypes,
   newCommentAuthorType,
   identityFields,
@@ -112,7 +125,7 @@ const NativeComposer = ({
 
   const handleSubmit = async (): Promise<void> => {
     const text = draft.trim();
-    if (!text || sending) return;
+    if (!text || sending || isSubmitting) return;
     if (identityFields?.authorName?.required && !authorName.trim()) {
       setError("Enter your name before posting.");
       return;
@@ -185,7 +198,9 @@ const NativeComposer = ({
       <TextInput
         multiline
         numberOfLines={3}
-        placeholder={replyingTo ? `Reply to ${replyingTo.author}…` : showRating ? "Share your review…" : "Write a comment…"}
+        accessibilityLabel={composerLabel || (variant === "chat" ? "Send a message" : replyingTo ? "Write a reply" : showRating ? "Write a review" : "Add a comment")}
+        placeholder={inputPlaceholder || (replyingTo ? `Reply to ${replyingTo.author}…` : showRating ? "Share your review…" : variant === "chat" ? "Message the assistant…" : "Write a comment…")}
+        editable={!sending && !isSubmitting}
         placeholderTextColor="#98a2b3"
         style={[styles.input, styles.textarea]}
         value={draft}
@@ -212,9 +227,11 @@ const NativeComposer = ({
             <Text>📎</Text><Text style={styles.toolButtonText}>Attach</Text>
           </Pressable>
         )}
-        <Pressable accessibilityRole="button" style={styles.toolButton} onPress={() => setEmojiOpen(true)}>
-          <Text>😀</Text><Text style={styles.toolButtonText}>Emoji</Text>
-        </Pressable>
+        {allowEmoji && (
+          <Pressable accessibilityRole="button" style={styles.toolButton} onPress={() => setEmojiOpen(true)}>
+            <Text>😀</Text><Text style={styles.toolButtonText}>Emoji</Text>
+          </Pressable>
+        )}
         {replyingTo && replyAuthorTypes.length > 1 ? (
           <View style={styles.roleWrap}>
             <Pressable accessibilityRole="button" style={styles.toolButton} onPress={() => setRoleMenuOpen((open) => !open)}>
@@ -241,11 +258,11 @@ const NativeComposer = ({
         <View style={styles.flexSpacer} />
         <Pressable
           accessibilityRole="button"
-          disabled={sending || !draft.trim()}
-          style={[styles.sendButton, (sending || !draft.trim()) && styles.sendDisabled]}
+          disabled={sending || isSubmitting || !draft.trim()}
+          style={[styles.sendButton, (sending || isSubmitting || !draft.trim()) && styles.sendDisabled]}
           onPress={() => void handleSubmit()}
         >
-          <Text style={styles.sendText}>{sending ? "Posting…" : replyingTo ? "Reply" : variant === "review" ? "Post review" : "Send"}</Text>
+          <Text style={styles.sendText}>{sending || isSubmitting ? submittingLabel || (variant === "chat" ? "Thinking…" : "Posting…") : submitButtonLabel || (replyingTo ? "Reply" : variant === "review" ? "Post review" : "Send")}</Text>
         </Pressable>
       </View>
 

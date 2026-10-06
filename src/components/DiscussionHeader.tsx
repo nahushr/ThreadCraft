@@ -1,11 +1,11 @@
 import type { JSX } from "react";
-import type { ThreadCraftData } from "../types";
+import type { ThreadCraftData, ThreadCraftVariant } from "../types";
 import { formatDate } from "../utils/formatDate";
 import styles from "./DiscussionHeader.module.scss";
 
 interface DiscussionHeaderProps {
   data: ThreadCraftData;
-  variant: "issue" | "review";
+  variant: ThreadCraftVariant;
 }
 
 const DiscussionHeader = ({ data, variant }: DiscussionHeaderProps): JSX.Element => {
@@ -22,16 +22,18 @@ const DiscussionHeader = ({ data, variant }: DiscussionHeaderProps): JSX.Element
         <div className={styles.eyebrow}>
           {variant === "review"
             ? "CUSTOMER REVIEWS"
-            : `GITHUB ISSUE${data.id != null ? ` #${data.id}` : ""}`}
+            : variant === "chat"
+              ? "AI CHAT"
+              : `GITHUB ISSUE${data.id != null ? ` #${data.id}` : ""}`}
         </div>
         <h2 className={styles.title}>
-          {data.title || (variant === "review" ? "Customer reviews" : "Discussion")}
+          {data.title || (variant === "review" ? "Customer reviews" : variant === "chat" ? "AI chat" : "Discussion")}
         </h2>
         {data.body && <p className={styles.body}>{data.body}</p>}
         <div className={styles.details}>
           {data.author && (
             <span>
-              {variant === "review" ? "Store" : "Opened by"} <strong>{data.author}</strong>
+              {variant === "review" ? "Store" : variant === "chat" ? "Assistant" : "Opened by"} <strong>{data.author}</strong>
             </span>
           )}
           {data.createdAt && <time>{formatDate(data.createdAt)}</time>}
@@ -42,7 +44,7 @@ const DiscussionHeader = ({ data, variant }: DiscussionHeaderProps): JSX.Element
       </div>
       {data.url && (
         <a className={styles.externalLink} href={data.url} target="_blank" rel="noreferrer">
-          View on GitHub <span aria-hidden="true">↗</span>
+          {variant === "chat" ? "Open chat" : "View on GitHub"} <span aria-hidden="true">↗</span>
         </a>
       )}
     </header>
