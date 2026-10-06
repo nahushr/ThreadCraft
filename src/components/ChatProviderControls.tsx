@@ -177,21 +177,6 @@ const ChatProviderControls = ({
             ))}
           </select>
         </label>
-        <label className={`${styles.field} ${styles.modelField}`}>
-          <span id={modelLabelId}>Model</span>
-          <select
-            aria-labelledby={modelLabelId}
-            disabled={models.length === 0 || isLoading}
-            value={activeModelId}
-            onChange={(event) => handleModelChange(event.target.value)}
-          >
-            {models.length === 0
-              ? <option value="">Load models to choose</option>
-              : models.map((model) => (
-                <option key={model.id} value={model.id}>{model.label ?? model.id}</option>
-              ))}
-          </select>
-        </label>
       </div>
 
       {showApiKeyInput && (
@@ -235,6 +220,23 @@ const ChatProviderControls = ({
           </button>
         </div>
       )}
+
+      <label className={styles.field}>
+        <span id={modelLabelId}>Model</span>
+        <select
+          aria-labelledby={modelLabelId}
+          disabled={models.length === 0 || isLoading}
+          value={activeModelId}
+          onChange={(event) => handleModelChange(event.target.value)}
+        >
+          {models.length === 0
+            ? <option value="">Load models to choose</option>
+            : models.map((model) => (
+              <option key={model.id} value={model.id}>{model.label ?? model.id}</option>
+            ))}
+        </select>
+      </label>
+
       {(error || message) && (
         <p className={error ? styles.error : styles.status} role={error ? "alert" : "status"}>
           {error || message}

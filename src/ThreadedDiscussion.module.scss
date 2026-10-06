@@ -173,10 +173,15 @@
   .chatWorkspaceWithSettings {
     display: grid;
     grid-template-columns: minmax(232px, 270px) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
   }
 
   .chatSettingsPanel {
     width: auto;
+    height: 100%;
+    min-height: 0;
+    align-self: stretch;
     border-right: 1px solid var(--tc-line);
   }
 }
