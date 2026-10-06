@@ -9,6 +9,7 @@ import type {
   ThreadCraftSubmitPayload,
   ThreadCraftVariant,
 } from "../types";
+import isValidEmail from "../utils/isValidEmail";
 import AttachmentPicker from "./AttachmentPicker";
 import EmojiPicker from "./EmojiPicker";
 import RatingPicker from "./RatingPicker";
@@ -76,7 +77,7 @@ const getIdentityError = (
 ): string => {
   if (identityFields?.authorName?.required && !authorName.trim()) return "Enter your name before posting.";
   if (identityFields?.authorEmail?.required && !authorEmail.trim()) return "Enter your email before posting.";
-  if (authorEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authorEmail.trim())) {
+  if (authorEmail.trim() && !isValidEmail(authorEmail.trim())) {
     return "Enter a valid email address.";
   }
   return "";

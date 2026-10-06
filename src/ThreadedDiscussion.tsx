@@ -305,11 +305,10 @@ const DiscussionConversation = ({
           <span>{data.totalRootComments ?? commentCount} {getCommentNoun(variant)}</span>
         </div>
       )}
-      <div
-        aria-label={isChat ? "Conversation messages" : undefined}
+      <section
+        aria-label={isChat ? "Conversation messages" : "Discussion comments"}
         className={[styles.stream, isChat ? styles.chatStream : ""].filter(Boolean).join(" ")}
         ref={streamRef}
-        role={isChat ? "region" : undefined}
       >
         {olderMessagesPlacement === "start" && moreButton}
         {visibleComments.length === 0 ? (
@@ -334,7 +333,7 @@ const DiscussionConversation = ({
         {olderMessagesPlacement === "end" && moreButton}
         {isChat && typingIndicator && <ChatTypingIndicator label={typingIndicatorLabel} />}
         {loadError && <p className={styles.error} role="alert">{loadError}</p>}
-      </div>
+      </section>
       {(allowNewComments || (allowReplies && replyingTo != null)) && (
         <CommentComposer
           variant={variant}
